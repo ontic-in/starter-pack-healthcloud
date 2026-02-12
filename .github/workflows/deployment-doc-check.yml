@@ -1,0 +1,203 @@
+name: Deployment Doc Review
+
+on:
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch: # Allow manual trigger for testing
+
+jobs:
+  validate-deployment-doc:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout with full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Full git history for commit analysis
+
+      - name: Setup Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Validate Deployment Doc with AI
+        id: validate
+        run: |
+          set -o pipefail
+
+          echo "Running deployment doc validation..."
+          npm run validate:deployment:verbose 2>&1 | tee validation-output.log
+          EXIT_CODE=${PIPESTATUS[0]}
+
+          echo "validation_exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
+
+          # Extract JSON from output (try multiple patterns)
+          # First try: Extract JSON from markdown code blocks
+          JSON_RESULT=$(sed -n '/^```json$/,/^```$/p' validation-output.log | sed '1d;$d' | jq -c '.' 2>/dev/null || \
+                        grep -oP '\{(?:[^{}]|(?R))*\}' validation-output.log | tail -1 || \
+                        echo '{"status":"error","reason":"Failed to parse validation output"}')
+
+          echo "$JSON_RESULT" > validation-result.json
+
+          # Output status for next step
+          STATUS=$(echo "$JSON_RESULT" | jq -r '.status // "error"')
+          echo "validation_status=$STATUS" >> $GITHUB_OUTPUT
+
+          # Don't exit here - let conditional steps handle the flow
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        continue-on-error: true
+
+      - name: Comment on PR - Failure
+        if: steps.validate.outputs.validation_status == 'fail'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const result = JSON.parse(fs.readFileSync('validation-result.json', 'utf8'));
+
+            const ticketId = result.ticketId || 'Unknown';
+            const reason = result.reason || 'Unknown reason';
+            const errors = result.errors || [];
+            const missingComponents = result.missingComponents || [];
+            const suggestions = result.suggestions || [];
+            const deploymentDocPath = result.deploymentDocPath || 'tickets/{ticketId}/clickup_{ticketId}_deployment.md';
+
+            let body = `## ❌ Deployment Doc Validation Failed
+
+            **Ticket:** \`${ticketId}\`
+            **Branch:** \`${{ github.head_ref }}\`
+
+            **Reason:** ${reason}
+
+            ---
+            `;
+
+            if (errors.length > 0) {
+              body += `\n### 🔴 Errors\n\n`;
+              errors.forEach(e => {
+                body += `- **[\`${e.section}\`]** ${e.message}\n`;
+              });
+            }
+
+            if (missingComponents.length > 0) {
+              body += `\n### 📦 Missing Components in package.xml\n\n`;
+              missingComponents.forEach(c => {
+                body += `- \`${c}\`\n`;
+              });
+            }
+
+            if (suggestions.length > 0) {
+              body += `\n### 💡 Suggestions\n\n`;
+              suggestions.forEach(s => {
+                body += `- ${s}\n`;
+              });
+            }
+
+            body += `\n---\n\n`;
+            body += `### 📖 Action Required\n\n`;
+            body += `Create or update deployment doc at:\n`;
+            body += `\`\`\`\n${deploymentDocPath}\n\`\`\`\n\n`;
+            body += `**Template:** See [Bharat's deployment doc example](https://github.com/ontic-in/SIM/blob/clickup-86d0ffj9x-web-crawler-spike/docs/deployment_components/deployment_components_to_prod.md)\n\n`;
+            body += `**Rerun validation:** \`npm run validate:deployment:verbose\`\n`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
+
+      - name: Comment on PR - Success
+        if: steps.validate.outputs.validation_status == 'pass'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const result = JSON.parse(fs.readFileSync('validation-result.json', 'utf8'));
+
+            const ticketId = result.ticketId || 'Unknown';
+            const reason = result.reason || 'Validation passed';
+            const confidence = result.confidence || 0.0;
+
+            const body = `## ✅ Deployment Doc Validation Passed
+
+            **Ticket:** \`${ticketId}\`
+            **Branch:** \`${{ github.head_ref }}\`
+            **Confidence:** ${(confidence * 100).toFixed(0)}%
+
+            ${reason}
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
+
+      - name: Comment on PR - Not Needed
+        if: steps.validate.outputs.validation_status == 'not_needed'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const result = JSON.parse(fs.readFileSync('validation-result.json', 'utf8'));
+
+            const reason = result.reason || 'No deployment-critical changes detected';
+
+            const body = `## ✅ Deployment Doc Not Needed
+
+            **Branch:** \`${{ github.head_ref }}\`
+
+            ${reason}
+
+            Only documentation or cosmetic changes detected - no Salesforce metadata deployment required.
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
+
+      - name: Upload validation logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-validation-logs-${{ github.run_id }}
+          path: |
+            validation-output.log
+            validation-result.json
+          retention-days: 30
+
+      - name: Final Status Check
+        if: steps.validate.outputs.validation_status == 'fail' || steps.validate.outputs.validation_status == 'error'
+        run: |
+          STATUS="${{ steps.validate.outputs.validation_status }}"
+          if [ "$STATUS" == "fail" ]; then
+            echo "::error::Deployment documentation validation failed"
+            echo "Review the errors in the PR comment and update your deployment doc"
+          else
+            echo "::error::Deployment documentation validation encountered an error"
+            echo "Check the validation logs for details"
+          fi
+          exit 1
+
+# Required GitHub Secrets:
+# - ANTHROPIC_API_KEY: Claude API key for AI validation
+#
+# The workflow executes exec/DEPLOYMENT_DOC_REVIEW.md which:
+# 1. Analyzes git diff for Salesforce metadata changes
+# 2. Determines if deployment doc is required
+# 3. Validates doc structure and completeness
+# 4. Posts detailed feedback as PR comment
+# 5. Fails if validation doesn't pass (can be monitored for flakiness)

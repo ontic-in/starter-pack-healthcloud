@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[PROJECT_NAME] - Integration Environment</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    .version-info {
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      background: rgba(0, 0, 0, 0.7);
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      z-index: 9998;
+      line-height: 1.4;
+    }
+    .version-info .label {
+      color: #aaa;
+      font-weight: bold;
+    }
+
+    .env-badge {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: #FF6B35;
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      z-index: 9999;
+      box-shadow: 0 2px 10px rgba(255, 107, 53, 0.3);
+    }
+
+    /* Fix chat window height to eliminate scrolling */
+    iframe[title="Chat with an Agent"] {
+      height: 700px !important;
+      min-height: 700px !important;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Environment Badge -->
+  <div class="env-badge">INTEGRATION</div>
+
+  <h1>[PROJECT_NAME]</h1>
+  <h2 style="color: #666; font-family: 'Montserrat', sans-serif;">Integration Environment - Testing</h2>
+
+  <!-- Version Information (injected during build) -->
+  <div class="version-info">
+    <div><span class="label">Environment:</span> <span>INTEGRATION</span></div>
+    <div><span class="label">Branch:</span> <span id="branch">__GIT_BRANCH__</span></div>
+    <div><span class="label">Commit:</span> <span id="commit">__GIT_COMMIT__</span></div>
+    <div><span class="label">Built:</span> <span id="build-time">__BUILD_TIME__</span></div>
+  </div>
+
+  <script src="integration.js"></script>
+  <script type='text/javascript'
+    src='[SALESFORCE_EMBEDDED_MESSAGING_URL_STAGING]/assets/js/bootstrap.min.js'
+    onload='initEmbeddedMessaging()'></script>
+
+  <!-- Integration environment for testing -->
+</body>
+
+</html>

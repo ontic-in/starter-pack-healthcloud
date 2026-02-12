@@ -1,0 +1,58 @@
+<?xml version="1.0" ?>
+<!-- SIM Security Ruleset - For CI/CD Static Analysis -->
+<ruleset
+  name="SIM Salesforce Standards"
+  xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd"
+>
+
+    <description>
+        SIM Agentforce project PMD standards.
+        Comprehensive rules (security, bestpractices, performance, errorprone, design)
+        with domain object constructor allowance for ExcessiveParameterList.
+    </description>
+
+    <!-- Security rules: NEVER suppress -->
+    <rule ref="category/apex/security.xml" />
+
+    <!-- Best practices rules: NEVER suppress -->
+    <rule ref="category/apex/bestpractices.xml" />
+
+    <!-- Performance rules: NEVER suppress -->
+    <rule ref="category/apex/performance.xml" />
+
+    <!-- Error prone rules: Catches actual bugs - NEVER suppress -->
+    <rule ref="category/apex/errorprone.xml" />
+
+    <!-- Design rules: Include all except customized rules below -->
+    <rule ref="category/apex/design.xml">
+        <exclude name="ExcessiveParameterList" />
+        <!--
+        AvoidBooleanMethodParameters excluded because:
+        - The real problem is primitive obsession, not primitives themselves
+        - Boolean params with clear names (consentGiven, not flag) are intention-revealing
+        - Constructor context makes meaning obvious
+        - Our pattern: UI input → domain object with clear naming
+        - Alternative (enum) adds complexity without clarity benefit for simple true/false
+        -->
+        <exclude name="AvoidBooleanMethodParameters" />
+    </rule>
+
+    <!-- ExcessiveParameterList: Allow up to 8 params for domain object constructors -->
+    <rule ref="category/apex/design.xml/ExcessiveParameterList">
+        <description>
+            Avoid excessive parameter lists (threshold: 8).
+
+            Rationale: Domain objects like ProspectLead(firstName, lastName, email, phone, country, consent)
+            require all data at construction for immutability (Eric Evans DDD pattern).
+            Salesforce default (4 params) is too restrictive for value objects.
+
+            If a method exceeds 8 params, refactor to use a parameter object.
+        </description>
+        <properties>
+            <property name="minimum" value="8" />
+        </properties>
+    </rule>
+
+</ruleset>

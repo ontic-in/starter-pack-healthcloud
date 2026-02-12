@@ -1,0 +1,60 @@
+name: LWC Code Review
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'development/sf_project/force-app/**/lwc/**/*.html'
+      - 'development/sf_project/force-app/**/lwc/**/*.css'
+      - 'development/sf_project/force-app/**/lwc/**/*.js'
+      - '.github/workflows/lwc-code-review.yml'
+
+jobs:
+  lwc-review:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout with full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install sf_project dependencies
+        working-directory: development/sf_project
+        run: npm ci
+
+      - name: Run LWC Code Review
+        id: review
+        run: |
+          set +e  # Don't exit on error
+          set -o pipefail  # Capture exit code from bash, not tee
+          bash scripts/ci-lwc-review.sh 2>&1 | tee lwc-review.log
+          EXIT_CODE=${PIPESTATUS[0]}
+          echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
+          echo "LWC code review exit code: $EXIT_CODE"
+          exit 0  # Always succeed so we can check exit code in final step
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - name: Upload review logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lwc-review-logs-${{ github.run_id }}
+          path: lwc-review.log
+          retention-days: 30
+
+      - name: Final status check
+        if: steps.review.outputs.exit_code != '0'
+        run: |
+          echo "::error::LWC code review failed - critical violations detected"
+          exit 1

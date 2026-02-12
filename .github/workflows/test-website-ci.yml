@@ -1,0 +1,49 @@
+name: Test Website CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'development/test_website/**'
+      - '.github/workflows/test-website-ci.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'development/test_website/**'
+      - '.github/workflows/test-website-ci.yml'
+
+jobs:
+  test-website-checks:
+    name: Test Website Lint and Tests
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+          cache-dependency-path: development/test_website/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: development/test_website
+
+      - name: Run ESLint
+        run: npm run lint
+        working-directory: development/test_website
+
+      - name: Run unit tests
+        run: npm run test:unit:run
+        working-directory: development/test_website
+
+      - name: Run build
+        run: npm run build
+        working-directory: development/test_website

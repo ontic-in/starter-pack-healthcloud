@@ -1,0 +1,65 @@
+name: Prompt Testing Framework - TypeScript & ESLint Checks
+
+on:
+  push:
+    paths:
+      - 'development/prompt_development_and_testing/**'
+    branches: [ main, develop ]
+  pull_request:
+    paths:
+      - 'development/prompt_development_and_testing/**'
+    branches: [ main, develop ]
+
+jobs:
+  typescript-eslint-checks:
+    name: TypeScript Compilation & ESLint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'development/prompt_development_and_testing/package-lock.json'
+
+      - name: Install dependencies
+        working-directory: development/prompt_development_and_testing
+        run: npm ci
+
+      - name: TypeScript compilation check
+        working-directory: development/prompt_development_and_testing
+        run: npm run build
+
+      - name: ESLint check
+        working-directory: development/prompt_development_and_testing
+        run: npm run lint
+
+      - name: Run tests (optional verification)
+        working-directory: development/prompt_development_and_testing
+        run: npm run test:prompt
+        continue-on-error: true
+        env:
+          # Skip authentication-dependent tests in CI
+          CI: true
+
+  summary:
+    name: Check Summary
+    runs-on: ubuntu-latest
+    needs: typescript-eslint-checks
+    if: always()
+
+    steps:
+      - name: Check results
+        run: |
+          if [ "${{ needs.typescript-eslint-checks.result }}" == "success" ]; then
+            echo "✅ All TypeScript and ESLint checks passed!"
+            echo "The prompt testing framework code quality is maintained."
+          else
+            echo "❌ TypeScript compilation or ESLint checks failed!"
+            echo "Please fix the issues before merging."
+            exit 1
+          fi

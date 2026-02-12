@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIM - First Level Page</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Montserrat', sans-serif;
+      background: url('images/background.svg') no-repeat center center fixed;
+      background-size: cover;
+    }
+    .hero-section {
+      width: 100%;
+      height: 300px;
+      background-image: url('images/hero-banner.jpg');
+      background-size: cover;
+      background-position: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+    .logo {
+      width: 120px;
+      height: 120px;
+      margin: 20px auto;
+      display: block;
+    }
+    .content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background: rgba(255,255,255,0.95);
+      min-height: 300px;
+    }
+    .thumbnails {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      margin: 30px 0;
+      flex-wrap: wrap;
+    }
+    .thumbnail {
+      width: 250px;
+      height: 170px;
+      object-fit: cover;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .documents {
+      margin: 30px 0;
+      text-align: center;
+    }
+    .documents a {
+      display: inline-block;
+      margin: 10px;
+      padding: 10px 20px;
+      background: #764ba2;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+    }
+    .documents a:hover {
+      background: #5a3a7a;
+    }
+    .back-link {
+      text-align: center;
+      margin: 30px 0;
+    }
+    .back-link a {
+      display: inline-block;
+      padding: 12px 24px;
+      background: #667eea;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+    .back-link a:hover {
+      background: #5568d3;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="hero-section">
+    <h1>First Level Page - Web Crawler Test</h1>
+  </div>
+
+  <div class="content">
+    <img src="images/logo.png" alt="SIM Logo" class="logo">
+
+    <h2 style="text-align: center;">First Level Content with Media References</h2>
+    <p style="text-align: center;">This page contains additional references to test documents and images for web crawler testing.</p>
+
+    <div class="thumbnails">
+      <img src="images/thumbnail-1.jpg" alt="Thumbnail 1" class="thumbnail">
+      <img src="images/thumbnail-2.jpg" alt="Thumbnail 2" class="thumbnail">
+      <img src="images/thumbnail-3.jpg" alt="Thumbnail 3" class="thumbnail">
+    </div>
+
+    <div class="documents">
+      <h3>Test Documents</h3>
+      <a href="documents/test-document.pdf" target="_blank">Test Document (PDF)</a>
+      <a href="documents/sample-report.pdf" target="_blank">Sample Report (PDF)</a>
+    </div>
+
+    <div class="documents">
+      <h3>All Image References</h3>
+      <a href="images/background.svg" target="_blank">Background Image (SVG)</a>
+      <a href="images/hero-banner.jpg" target="_blank">Hero Banner Image (JPG)</a>
+      <a href="images/logo.png" target="_blank">Logo Image (PNG)</a>
+      <a href="images/thumbnail-1.jpg" target="_blank">Thumbnail 1 (JPG)</a>
+      <a href="images/thumbnail-2.jpg" target="_blank">Thumbnail 2 (JPG)</a>
+      <a href="images/thumbnail-3.jpg" target="_blank">Thumbnail 3 (JPG)</a>
+    </div>
+
+    <div class="back-link">
+      <a href="index.html">Back to Home Page</a>
+    </div>
+  </div>
+</body>
+
+</html>

@@ -1,0 +1,44 @@
+name: PMD Code Quality Check
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  pmd-analysis:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "21"
+
+      - name: Download and setup PMD
+        run: |
+          cd $HOME
+          wget https://github.com/pmd/pmd/releases/download/pmd_releases%2F7.17.0/pmd-dist-7.17.0-bin.zip
+          unzip pmd-dist-7.17.0-bin.zip
+          echo "$HOME/pmd-bin-7.17.0/bin" >> $GITHUB_PATH
+
+      - name: Run PMD analysis with comprehensive rulesets
+        run: |
+          CLASSES_DIR="development/sf_project/force-app/main/default/classes"
+
+          if [ -d "$CLASSES_DIR" ] && [ "$(ls -A $CLASSES_DIR/*.cls 2>/dev/null)" ]; then
+            echo "Analyzing Apex classes in $CLASSES_DIR"
+            cd development/sf_project
+            PMD_APEX_ROOT_DIRECTORY=$(pwd) pmd check -d force-app/main/default/classes \
+              -R pmd-ruleset.xml \
+              -f json \
+              --no-progress
+          else
+            echo "No Apex classes found in $CLASSES_DIR - skipping PMD analysis"
+            echo "PMD will run automatically when Apex development starts"
+          fi

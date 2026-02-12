@@ -1,0 +1,78 @@
+{
+  "name": "hypernative",
+  "version": "1.0.0",
+  "description": "Salesforce Agentforce project with prompt template testing automation",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prepare": "husky install",
+    "lint-staged": "lint-staged",
+    "serve:test-site": "npx http-server development/test_website -p 8080 -c-1",
+    "test:functional": "playwright test",
+    "test:functional:headed": "playwright test --headed",
+    "test:functional:ui": "playwright test --ui",
+    "playwright:install": "playwright install",
+    "playwright:report": "playwright show-report",
+    "ci": "npm run ci:apex && npm run ci:lwc && npm run ci:lint && npm run ci:pmd && npm run ci:apex-review && npm run ci:lwc-review && npm run ci:prompt-review",
+    "ci:full": "npm run ci && npm run test:functional",
+    "ci:apex": "sf apex run test --target-org [ORG_ALIAS] --result-format json --concise",
+    "ci:lwc": "cd development/sf_project && npm test",
+    "ci:lint": "cd development/sf_project && npm run lint",
+    "ci:pmd": "cd development/sf_project && PMD_APEX_ROOT_DIRECTORY=$(pwd) pmd check -d force-app/main/default/classes -R pmd-ruleset.xml -f json",
+    "ci:apex-review": "bash scripts/ci-apex-review.sh",
+    "ci:lwc-review": "bash scripts/ci-lwc-review.sh",
+    "ci:prompt-review": "bash scripts/ci-prompt-review.sh",
+    "deploy": "cd development/test_website && npm run deploy",
+    "validate:deployment": "bash scripts/validate-deployment-doc.sh",
+    "validate:deployment:verbose": "bash scripts/validate-deployment-doc.sh --verbose",
+    "apex-code-review": "node scripts/code-review/apex-review-runner.js",
+    "apex-code-review:help": "node scripts/code-review/apex-review-runner.js --help",
+    "lwc-code-review": "node scripts/code-review/lwc-review-runner.js",
+    "lwc-code-review:help": "node scripts/code-review/lwc-review-runner.js --help",
+    "prompt-review": "node --import tsx/esm scripts/code-review/prompt-review-runner.ts",
+    "prompt-review:help": "node --import tsx/esm scripts/code-review/prompt-review-runner.ts --help"
+  },
+  "lint-staged": {
+    "development/prompt_development_and_testing/**/*.ts": [
+      "cd development/prompt_development_and_testing && npm run lint:fix"
+    ]
+  },
+  "devDependencies": {
+    "@anthropic-ai/sdk": "^0.30.1",
+    "@octokit/rest": "^20.1.2",
+    "@playwright/test": "^1.40.0",
+    "@prettier/plugin-xml": "^3.4.2",
+    "@types/fluent-ffmpeg": "^2.1.24",
+    "@types/node": "^20.19.20",
+    "@typescript-eslint/eslint-plugin": "^8.46.0",
+    "@typescript-eslint/parser": "^8.46.0",
+    "axios": "^1.12.2",
+    "commander": "^11.1.0",
+    "dotenv": "^17.2.3",
+    "eslint": "8.57.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "ffmpeg-extract-frames": "^2.0.2",
+    "fluent-ffmpeg": "^2.1.2",
+    "http-server": "^14.1.1",
+    "husky": "^8.0.3",
+    "lint-staged": "^15.5.2",
+    "ora": "^8.2.0",
+    "prettier": "^3.6.2",
+    "prettier-plugin-apex": "^2.2.6",
+    "tsx": "^4.6.0",
+    "typescript": "^5.3.0",
+    "vitest": "^3.2.4"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "salesforce",
+    "agentforce",
+    "prompt-testing",
+    "automation",
+    "playwright"
+  ],
+  "author": "[TEAM_NAME]"
+}

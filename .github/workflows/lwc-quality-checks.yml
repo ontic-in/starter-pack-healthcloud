@@ -1,0 +1,122 @@
+name: LWC Quality Checks (Jest & ESLint)
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'development/sf_project/**'
+      - '.github/workflows/lwc-quality-checks.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'development/sf_project/**'
+      - '.github/workflows/lwc-quality-checks.yml'
+
+jobs:
+  eslint:
+    name: ESLint - LWC Code Quality
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 18.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+          cache: 'npm'
+          cache-dependency-path: development/sf_project/package-lock.json
+
+      - name: Install dependencies
+        working-directory: development/sf_project
+        run: npm ci
+
+      - name: Run ESLint
+        working-directory: development/sf_project
+        run: npm run lint
+
+  jest:
+    name: Jest - LWC Unit Tests
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 18.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+          cache: 'npm'
+          cache-dependency-path: development/sf_project/package-lock.json
+
+      - name: Install dependencies
+        working-directory: development/sf_project
+        run: npm ci
+
+      - name: Run Jest tests with coverage
+        working-directory: development/sf_project
+        run: npm run test:unit:coverage
+
+      - name: Upload coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lwc-coverage-report-${{ github.run_id }}
+          path: development/sf_project/coverage/
+          retention-days: 30
+
+      - name: Coverage Summary
+        if: always()
+        working-directory: development/sf_project
+        run: |
+          if [ -f coverage/coverage-summary.json ]; then
+            echo "## 📊 Test Coverage Summary" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            cat coverage/coverage-summary.json | jq -r '
+              .total |
+              "Lines:      \(.lines.pct)%\nStatements: \(.statements.pct)%\nFunctions:  \(.functions.pct)%\nBranches:   \(.branches.pct)%"
+            ' >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Coverage summary not found" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  summary:
+    name: Quality Checks Summary
+    runs-on: ubuntu-latest
+    needs: [eslint, jest]
+    if: always() && github.event_name == 'pull_request'
+
+    steps:
+      - name: Check Results
+        run: |
+          ESLINT_RESULT="${{ needs.eslint.result }}"
+          JEST_RESULT="${{ needs.jest.result }}"
+
+          echo "## 🔍 LWC Quality Checks Results"
+          echo ""
+
+          if [ "$ESLINT_RESULT" == "success" ]; then
+            echo "✅ ESLint: PASSED"
+          else
+            echo "❌ ESLint: FAILED"
+          fi
+
+          if [ "$JEST_RESULT" == "success" ]; then
+            echo "✅ Jest Tests: PASSED"
+          else
+            echo "❌ Jest Tests: FAILED"
+          fi
+
+          if [ "$ESLINT_RESULT" != "success" ] || [ "$JEST_RESULT" != "success" ]; then
+            echo ""
+            echo "❌ Quality checks failed. Please fix the issues before merging."
+            exit 1
+          fi
+
+          echo ""
+          echo "✅ All quality checks passed!"

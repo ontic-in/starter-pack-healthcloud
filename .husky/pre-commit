@@ -1,0 +1,39 @@
+#!/bin/sh
+# Pre-commit hook for SIM project
+
+cd development/test_website
+
+echo "🔍 Running ESLint..."
+npm run lint || exit 1
+
+echo "✅ Linting passed!"
+echo ""
+echo "🧪 Running tests..."
+npm test || exit 1
+
+echo "✅ Tests passed!"
+echo ""
+
+# Go back to repo root for deployment doc validation
+cd ../..
+
+# Optional: AI-powered deployment doc validation
+# Only runs if ANTHROPIC_API_KEY is set (local dev)
+if [ -n "$ANTHROPIC_API_KEY" ]; then
+  echo "📋 Validating deployment documentation with AI..."
+  npm run validate:deployment || {
+    echo ""
+    echo "❌ Deployment documentation validation failed!"
+    echo "Review the errors above and update your deployment doc."
+    echo ""
+    echo "💡 To bypass (emergency only): git commit --no-verify"
+    exit 1
+  }
+  echo "✅ Deployment doc validated!"
+else
+  echo "⏭️  Skipping deployment doc validation (no ANTHROPIC_API_KEY)"
+  echo "   Will run in CI on pull request"
+fi
+
+echo ""
+echo "✨ Pre-commit checks complete!"

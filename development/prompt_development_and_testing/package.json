@@ -1,0 +1,50 @@
+{
+  "name": "[project-name]-prompt-testing",
+  "version": "1.0.0",
+  "description": "Testing framework for Salesforce Agentforce prompt templates",
+  "type": "module",
+  "scripts": {
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "test:coverage": "vitest --coverage",
+    "auth": "node --import tsx/esm scripts/auth.ts",
+    "test:prompt": "vitest --run tests/prompt/",
+    "build": "tsc --noEmit",
+    "lint": "eslint . --ext .ts,.js",
+    "lint:fix": "eslint . --ext .ts,.js --fix",
+    "check": "npm run build && npm run lint",
+    "check:fix": "npm run build && npm run lint:fix",
+    "validate": "npm run check && npm run test",
+    "dev": "vitest --watch --ui"
+  },
+  "keywords": [
+    "salesforce",
+    "agentforce",
+    "prompt",
+    "testing"
+  ],
+  "author": "[TEAM_NAME]",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "@vitest/coverage-v8": "^1.0.0",
+    "@vitest/ui": "^1.0.0",
+    "eslint": "^8.57.1",
+    "prettier": "^3.6.2",
+    "tsx": "^4.6.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
+    "axios": "^1.6.0",
+    "commander": "^12.0.0",
+    "dotenv": "^16.3.0",
+    "ora": "^8.0.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
