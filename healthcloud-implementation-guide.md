@@ -80,7 +80,10 @@ Most Health Cloud implementations achieve **18-24 month payback** through:
 4. [Risk Factors & Considerations](#4-risk-factors--considerations)
    - [4.5 Data Migration Strategy](#45-data-migration-strategy)
 5. [End-to-End Demo Use Case: MediConnect Singapore](#5-end-to-end-demo-use-case-mediconnect-singapore)
-6. [Appendix](#6-appendix)
+6. [Decision-Making Framework](#6-decision-making-framework) *(Phase 3 - NEW)*
+7. [Ongoing Operations Guide](#7-ongoing-operations-guide) *(Phase 3 - NEW)*
+8. [Templates & Checklists](#8-templates--checklists) *(Phase 3 - NEW)*
+9. [Appendix](#9-appendix)
 
 ---
 
@@ -1758,9 +1761,385 @@ NEHR READINESS (for Health Information Bill)
 
 ---
 
-## 6. Appendix
+## 6. Decision-Making Framework
 
-### A. Glossary
+### Scenario Selection Decision Tree
+
+Use this flowchart to quickly identify the right implementation scenario:
+
+```
+START: What is your organisation type?
+│
+├─► Healthcare Provider (Hospital/Clinic)
+│   │
+│   ├─► Single site, <50 users?
+│   │   └─► YES → SCENARIO 1: Foundation/MVP ($210K-$295K, 10-14 wks)
+│   │
+│   ├─► Multi-site OR need EHR integration?
+│   │   │
+│   │   ├─► 2-3 facilities, 1-2 EHR systems?
+│   │   │   └─► SCENARIO 2: Care Coordination ($600K-$820K, 16-22 wks)
+│   │   │
+│   │   └─► 4+ facilities OR 3+ integrations OR AI/Data Cloud needed?
+│   │       └─► SCENARIO 3: Enterprise ($1.6M-$2.2M, 28-40 wks)
+│   │
+│   └─► Not sure? → Start with SCENARIO 1, expand later (65% of customers do this)
+│
+├─► Health Insurance / Payer
+│   └─► SCENARIO 4: Payer ($878K-$1.2M, 20-28 wks)
+│
+├─► Pharma / Life Sciences / MedTech
+│   └─► SCENARIO 5: Life Sciences ($507K-$722K, 16-22 wks)
+│
+└─► Hybrid (e.g., integrated insurer + provider)
+    └─► Combine SCENARIO 2 or 3 + SCENARIO 4 elements
+        (Consult Solution Architect for custom scoping)
+```
+
+### Organisational Readiness Assessment
+
+Score each dimension 1-5 (1=Not Ready, 5=Fully Ready). Minimum recommended score to proceed: **18/30**.
+
+| # | Dimension | Score (1-5) | What "5" Looks Like |
+|---|---|---|---|
+| 1 | **Executive Sponsorship** | ___ | C-suite sponsor identified, budget approved, steering committee formed |
+| 2 | **Data Readiness** | ___ | Patient data digitised, <10% duplicates, data governance policy exists |
+| 3 | **Process Maturity** | ___ | Clinical workflows documented, standardised across facilities |
+| 4 | **Technical Foundation** | ___ | Salesforce experience in-house, integration APIs available from EHR |
+| 5 | **Change Readiness** | ___ | Staff open to new tools, training programme planned, champions identified |
+| 6 | **Compliance Posture** | ___ | PDPA/HIPAA compliance programme active, DPO appointed, consent processes exist |
+| | **TOTAL** | ___/30 | |
+
+**Score Interpretation:**
+
+| Score Range | Readiness Level | Recommendation |
+|---|---|---|
+| 25-30 | High | Proceed with chosen scenario. Target aggressive timeline. |
+| 18-24 | Moderate | Proceed with a 2-4 week readiness sprint before implementation. |
+| 12-17 | Low | Invest 6-8 weeks in readiness activities before committing to implementation. |
+| Below 12 | Not Ready | Recommend a Discovery & Readiness engagement (4-6 weeks) before any implementation. |
+
+### Scenario Selection Scoring Matrix
+
+For a more analytical approach, score each factor and multiply by weight:
+
+| Factor | Weight | Scenario 1 | Scenario 2 | Scenario 3 | Scenario 4 | Scenario 5 |
+|---|---|---|---|---|---|---|
+| Time to Value | 25% | ★★★★★ | ★★★★ | ★★ | ★★★ | ★★★★ |
+| Feature Completeness | 20% | ★★ | ★★★★ | ★★★★★ | ★★★★ | ★★★ |
+| Budget Efficiency | 20% | ★★★★★ | ★★★ | ★★ | ★★★ | ★★★★ |
+| Scalability | 15% | ★★ | ★★★★ | ★★★★★ | ★★★★ | ★★★ |
+| Integration Depth | 10% | ★ | ★★★ | ★★★★★ | ★★★★ | ★★★ |
+| AI/Analytics | 10% | ★ | ★★ | ★★★★★ | ★★★ | ★★ |
+
+> **How to use:** Score your organisation's priority for each factor (1-5), multiply by weight, and compare against scenario strengths. The scenario with the highest correlation to your priorities is your best fit.
+
+### Build vs. Buy Decision Guide
+
+| Capability | Build Custom | Use Health Cloud | Recommendation |
+|---|---|---|---|
+| Patient 360 View | 12-16 weeks, $80K+ | Out-of-box | **Use Health Cloud** - mature, maintained by Salesforce |
+| Care Plan Management | 8-12 weeks, $60K+ | Out-of-box | **Use Health Cloud** - clinical protocol templates included |
+| EHR Integration | 6-10 weeks either way | FHIR R4 native | **Use Health Cloud** - native FHIR reduces integration effort by 40% |
+| Custom Clinical Workflows | Varies | OmniStudio + FlexCards | **Use Health Cloud** - low-code, faster iteration |
+| Niche Regulatory Reporting | May need custom | Limited OOTB | **Build Custom** - on Health Cloud platform |
+| Proprietary Risk Scoring | Custom ML model | Einstein AI | **Evaluate** - Einstein may suffice; custom for advanced models |
+
+---
+
+## 7. Ongoing Operations Guide
+
+### Post-Go-Live Support Model
+
+#### Phase 1: Hypercare (Weeks 1-4 Post Go-Live)
+
+| Aspect | Details |
+|---|---|
+| **Support Hours** | Extended: 7:00 AM - 10:00 PM SGT (Mon-Sat) |
+| **Response SLA** | P1 (system down): 15 min, P2 (feature broken): 1 hour, P3 (question): 4 hours |
+| **Team On-Call** | Solution Architect + 2 Developers + 1 QA |
+| **Daily Stand-ups** | 15-min check-in with clinical champions, track adoption blockers |
+| **Issue Tracking** | Dedicated Slack channel + ClickUp board for hypercare issues |
+| **Escalation Path** | Floor champion → Care coordinator lead → Project manager → Steering committee |
+
+#### Phase 2: Stabilisation (Months 2-3)
+
+| Aspect | Details |
+|---|---|
+| **Support Hours** | Standard: 8:30 AM - 6:00 PM SGT (Mon-Fri) |
+| **Response SLA** | P1: 30 min, P2: 2 hours, P3: 8 hours |
+| **Team** | 1 Developer + 1 Admin (part-time Architect on retainer) |
+| **Weekly Reviews** | Adoption metrics, defect trends, enhancement requests |
+| **Knowledge Transfer** | Complete handover to internal admin/support team |
+
+#### Phase 3: BAU Operations (Month 4+)
+
+| Aspect | Details |
+|---|---|
+| **Support Hours** | Business hours with on-call for P1 |
+| **Response SLA** | P1: 1 hour, P2: 4 hours, P3: Next business day |
+| **Team** | Internal Salesforce Admin + managed services partner (optional) |
+| **Monthly Reviews** | System health check, usage analytics, enhancement prioritisation |
+
+### BAU Team Structure
+
+| Role | FTE | Responsibilities |
+|---|---|---|
+| **Salesforce Admin** | 1.0 | User management, reports, dashboards, basic config changes, support tickets |
+| **Health Cloud Specialist** | 0.5-1.0 | Care plan updates, clinical workflow changes, OmniStudio maintenance |
+| **Integration Admin** | 0.5 | Monitor FHIR integrations, troubleshoot data sync issues, API health |
+| **Data Steward** | 0.5 | Data quality monitoring, duplicate management, migration support |
+| **Business Analyst** | 0.5 | Requirements for enhancements, user feedback, process optimisation |
+| **Project Lead** | 0.25 | Roadmap prioritisation, vendor management, steering committee reports |
+
+> **Cost Estimate:** BAU team costs approximately SGD 250K-400K/year for a Scenario 2-sized deployment (salaries + tools). Managed services alternative: SGD 8K-15K/month for an APAC-based partner.
+
+### Salesforce Release Management
+
+Salesforce delivers 3 major releases per year. Health Cloud teams must plan for these:
+
+| Release | Typical Month | Action Required |
+|---|---|---|
+| **Spring Release** | February | Review release notes by Jan 15, sandbox testing by Jan 30 |
+| **Summer Release** | June | Review release notes by May 15, sandbox testing by May 30 |
+| **Winter Release** | October | Review release notes by Sep 15, sandbox testing by Sep 30 |
+
+**Release Readiness Checklist:**
+
+- [ ] Review Salesforce Release Notes (filter for Health Cloud features)
+- [ ] Identify breaking changes or deprecated features
+- [ ] Test critical workflows in sandbox (post-refresh)
+- [ ] Validate integrations still function (FHIR endpoints, EHR sync)
+- [ ] Update OmniStudio components if required
+- [ ] Communicate changes to end users
+- [ ] Update training materials if UI/UX changes
+- [ ] Sign off for production release
+
+### Continuous Improvement Framework
+
+**Quarterly Optimisation Cycle:**
+
+```
+QUARTER CYCLE:
+┌─────────────────────────────────────────────────┐
+│  Week 1-2: MEASURE                              │
+│  - Pull adoption metrics (logins, feature usage) │
+│  - Survey user satisfaction (NPS)                │
+│  - Review support ticket themes                  │
+│  - Analyse care plan outcomes                    │
+│                                                  │
+│  Week 3-4: ANALYSE                              │
+│  - Identify top 3 pain points                    │
+│  - Benchmark against target KPIs                 │
+│  - Root cause analysis on adoption gaps          │
+│                                                  │
+│  Week 5-8: IMPROVE                              │
+│  - Implement top-priority enhancements           │
+│  - Deliver targeted re-training                  │
+│  - Optimise underperforming workflows            │
+│                                                  │
+│  Week 9-10: REVIEW                              │
+│  - Present results to steering committee         │
+│  - Update roadmap and priorities                 │
+│  - Plan next quarter's focus areas               │
+└─────────────────────────────────────────────────┘
+```
+
+**Key Performance Indicators (KPIs) to Track:**
+
+| Category | KPI | Target | Measurement |
+|---|---|---|---|
+| **Adoption** | Daily Active Users | >80% of licensed users | Salesforce Login Reports |
+| **Adoption** | Feature Utilisation | >60% using care plans | Custom report on care plan records |
+| **Clinical** | Care Plan Compliance | >75% on track | Care Plan dashboard |
+| **Clinical** | Readmission Rate | Decrease by 25% Year 1 | Health Cloud analytics |
+| **Operational** | No-Show Rate | Decrease by 40% Year 1 | Appointment analytics |
+| **Engagement** | Patient Portal Adoption | >50% of active patients | Portal login metrics |
+| **Technical** | System Uptime | >99.5% | Salesforce Trust status |
+| **Technical** | Integration Success Rate | >99% | MuleSoft/integration monitoring |
+| **Satisfaction** | Clinician NPS | >60 | Quarterly survey |
+| **Financial** | Cost per Patient Interaction | Decrease by 15% Year 1 | Finance + Salesforce data |
+
+### Health Cloud Feature Roadmap Alignment
+
+Stay current with Salesforce's Health Cloud evolution:
+
+| Upcoming Capability (2026-2027) | Impact | Action |
+|---|---|---|
+| **Agentforce for Clinical Triage** | AI-powered patient symptom assessment | Evaluate for patient portal integration |
+| **Enhanced Data Cloud for Healthcare** | Real-time patient risk scoring | Plan data architecture for unified profiles |
+| **FHIR R5 Support** | Next-gen interoperability | Review NEHR roadmap alignment |
+| **Generative AI Care Summaries** | Auto-generated clinical summaries | Pilot with 1-2 departments |
+| **Advanced Consent Management** | Granular purpose-based consent | Map to evolving PDPA/HIB requirements |
+
+---
+
+## 8. Templates & Checklists
+
+### A. Implementation Readiness Checklist
+
+Use this checklist before kicking off implementation. All "Must Have" items should be completed.
+
+**Organisational Readiness:**
+
+- [ ] **[Must Have]** Executive sponsor identified and committed
+- [ ] **[Must Have]** Budget approved for full implementation + Year 1 licensing
+- [ ] **[Must Have]** Internal project team allocated (PM, clinical SMEs, IT lead)
+- [ ] **[Should Have]** Steering committee established with monthly cadence
+- [ ] **[Should Have]** Change management plan drafted
+- [ ] **[Nice to Have]** Clinical champion network identified (1 per department)
+
+**Technical Readiness:**
+
+- [ ] **[Must Have]** Salesforce org provisioned (sandbox + production)
+- [ ] **[Must Have]** EHR/EMR API documentation obtained from vendor
+- [ ] **[Must Have]** Network/firewall rules reviewed for Salesforce IPs
+- [ ] **[Should Have]** SSO/identity provider configuration planned
+- [ ] **[Should Have]** Data migration source systems identified and access confirmed
+- [ ] **[Nice to Have]** Salesforce Admin certified staff available internally
+
+**Data Readiness:**
+
+- [ ] **[Must Have]** Patient data audit completed (volume, quality, duplicates)
+- [ ] **[Must Have]** Data mapping document started (source → Health Cloud fields)
+- [ ] **[Should Have]** Data cleansing plan for known quality issues
+- [ ] **[Should Have]** Historical data retention policy defined
+- [ ] **[Nice to Have]** Test data set prepared for sandbox
+
+**Compliance Readiness:**
+
+- [ ] **[Must Have]** PDPA compliance requirements documented
+- [ ] **[Must Have]** Data Processing Agreement (DPA) with Salesforce executed
+- [ ] **[Should Have]** Consent management requirements defined
+- [ ] **[Should Have]** Data residency requirements confirmed (Singapore region)
+- [ ] **[Nice to Have]** NEHR integration requirements assessed (for HIB readiness)
+
+### B. SI Partner / Vendor Evaluation Scorecard
+
+Score each vendor 1-5 on these criteria. Minimum recommended score: **35/50**.
+
+| # | Criteria | Weight | Vendor A | Vendor B | Vendor C |
+|---|---|---|---|---|---|
+| 1 | **Health Cloud Certifications** (team certs, PDO/PDI status) | 15% | ___/5 | ___/5 | ___/5 |
+| 2 | **Healthcare Domain Experience** (# of HC implementations) | 15% | ___/5 | ___/5 | ___/5 |
+| 3 | **APAC/Singapore Presence** (local team, timezone, references) | 10% | ___/5 | ___/5 | ___/5 |
+| 4 | **Integration Expertise** (FHIR, HL7, MuleSoft, EHR experience) | 15% | ___/5 | ___/5 | ___/5 |
+| 5 | **Compliance Knowledge** (PDPA, HIPAA, healthcare regulations) | 10% | ___/5 | ___/5 | ___/5 |
+| 6 | **Methodology & Approach** (Agile, phased delivery, risk mgmt) | 10% | ___/5 | ___/5 | ___/5 |
+| 7 | **Pricing & Value** (competitive rates, fixed-price options) | 10% | ___/5 | ___/5 | ___/5 |
+| 8 | **Post Go-Live Support** (managed services, SLA commitments) | 10% | ___/5 | ___/5 | ___/5 |
+| 9 | **Cultural Fit** (communication style, collaboration approach) | 5% | ___/5 | ___/5 | ___/5 |
+| 10 | **References** (verifiable healthcare clients in region) | Bonus | ___/5 | ___/5 | ___/5 |
+| | **WEIGHTED TOTAL** | 100% | ___/50 | ___/50 | ___/50 |
+
+**Key Questions to Ask SI Partners:**
+
+1. "How many Health Cloud implementations has your team completed in the last 2 years?"
+2. "Can you share a reference from a healthcare client in APAC?"
+3. "What is your approach to FHIR integration with [specific EHR vendor]?"
+4. "How do you handle PDPA compliance in your implementation methodology?"
+5. "What does your post-go-live support model look like, and what are the SLAs?"
+6. "What percentage of your quoted implementations were delivered on-time and on-budget?"
+
+### C. Go-Live Readiness Checklist
+
+All items must be completed before production go-live. Sign-off required from each stakeholder.
+
+**Technical Go-Live:**
+
+- [ ] All user acceptance test cases passed (100% critical, >95% non-critical)
+- [ ] Performance testing completed (page load <3s, API response <2s)
+- [ ] Security review completed (penetration test, access control validation)
+- [ ] Data migration validated (record counts match, spot checks passed)
+- [ ] Integrations verified in production (FHIR sync, EHR connection, batch jobs)
+- [ ] Backup and disaster recovery plan tested
+- [ ] Monitoring and alerting configured (Salesforce Shield, integration health)
+
+**Operational Go-Live:**
+
+- [ ] End-user training completed for all user groups
+- [ ] Training materials (guides, videos, quick reference cards) distributed
+- [ ] Help desk/support team briefed and ready
+- [ ] Hypercare team and schedule confirmed
+- [ ] Escalation matrix published and communicated
+- [ ] Floor champions identified and briefed per department
+
+**Compliance Go-Live:**
+
+- [ ] PDPA consent workflows tested and validated
+- [ ] Audit trail configuration verified
+- [ ] Data access controls tested (role-based, field-level, record-level)
+- [ ] Data retention policies configured
+- [ ] Breach notification workflow tested
+- [ ] DPO sign-off obtained
+
+**Business Go-Live:**
+
+- [ ] Go/No-Go decision meeting held with steering committee
+- [ ] Rollback plan documented and communicated
+- [ ] Communication sent to all affected staff
+- [ ] Patient-facing communications prepared (portal launch, new features)
+- [ ] Success metrics baseline captured (pre-go-live numbers)
+- [ ] Post-implementation review scheduled (4 weeks post go-live)
+
+| Sign-Off | Name | Role | Date | Signature |
+|---|---|---|---|---|
+| Technical | _______________ | Solution Architect | __________ | __________ |
+| Clinical | _______________ | Chief Medical Officer | __________ | __________ |
+| Compliance | _______________ | Data Protection Officer | __________ | __________ |
+| Business | _______________ | Executive Sponsor | __________ | __________ |
+| Project | _______________ | Project Manager | __________ | __________ |
+
+### D. Post-Implementation Review Template
+
+Conduct this review 4-6 weeks after go-live:
+
+**1. Objectives Achievement**
+
+| Original Objective | Target | Actual | Status |
+|---|---|---|---|
+| (e.g., Reduce no-show rate) | (e.g., -10%) | (e.g., -7%) | (e.g., Partial) |
+| | | | |
+| | | | |
+
+**2. Lessons Learned**
+
+| Category | What Went Well | What Could Improve | Action for Next Phase |
+|---|---|---|---|
+| **Planning** | | | |
+| **Technical** | | | |
+| **Data Migration** | | | |
+| **Training** | | | |
+| **Change Mgmt** | | | |
+
+**3. Adoption Metrics (4-Week Post Go-Live)**
+
+| Metric | Week 1 | Week 2 | Week 3 | Week 4 | Trend |
+|---|---|---|---|---|---|
+| Daily Active Users | | | | | |
+| Care Plans Created | | | | | |
+| Patient Portal Signups | | | | | |
+| Support Tickets Raised | | | | | |
+
+**4. Enhancement Backlog (Top 10 from User Feedback)**
+
+| # | Enhancement Request | Requester | Priority | Effort | Target Sprint |
+|---|---|---|---|---|---|
+| 1 | | | | | |
+| 2 | | | | | |
+| 3 | | | | | |
+
+**5. Recommendations for Next Phase**
+
+- _____________________________________________________________
+- _____________________________________________________________
+- _____________________________________________________________
+
+---
+
+## 9. Appendix
+
+### 9A. Glossary
 
 | Term | Definition |
 |---|---|
@@ -1774,7 +2153,7 @@ NEHR READINESS (for Health Information Bill)
 | **LVH** | Left Ventricular Hypertrophy |
 | **DASH Diet** | Dietary Approaches to Stop Hypertension |
 
-### B. Key Assumptions for Estimates
+### 9B. Key Assumptions for Estimates
 
 1. Implementation team is based in APAC (Singapore/India/Philippines rates)
 2. Standard Salesforce best practices followed (no heavily custom-coded solutions)
@@ -1784,7 +2163,7 @@ NEHR READINESS (for Health Information Bill)
 6. Licensing costs based on 2026 list pricing (volume discounts not applied)
 7. Multi-year contracts typically offer 10-20% discount on Year 2+ licensing
 
-### C. References
+### 9C. References
 
 - [Salesforce Health Cloud Implementation Guide 2025 - Oxrow](https://oxrow.com/salesforce-health-cloud-implementation-guide-2025/)
 - [Salesforce Health Cloud Pricing](https://www.salesforce.com/healthcare-life-sciences/health-cloud/pricing/)
