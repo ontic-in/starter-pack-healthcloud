@@ -1,0 +1,172 @@
+/**
+ * @description Reusable test data factory for Patient 360 Health Cloud tests.
+ *              Centralizes creation of Person Account patients and related
+ *              clinical/insurance records used across multiple test classes.
+ */
+@isTest
+public class TestDataFactory {
+
+    /**
+     * @description Creates and inserts a Person Account patient with minimal fields.
+     * @param firstName Patient first name.
+     * @param lastName Patient last name.
+     * @param nric NRIC value (must be unique).
+     * @return The inserted Account record.
+     */
+    public static Account createPatient(String firstName, String lastName, String nric) {
+        Id personAccountRTId = Schema.SObjectType.Account.getRecordTypeInfosByName()
+            .get('Person Account').getRecordTypeId();
+
+        Account patient = new Account(
+            RecordTypeId = personAccountRTId,
+            FirstName = firstName,
+            LastName = lastName,
+            NRIC__c = nric
+        );
+        insert patient;
+        return patient;
+    }
+
+    /**
+     * @description Creates and inserts a Person Account patient with additional field overrides.
+     *              Pass an Account with extra fields set; they will be merged onto the base patient.
+     * @param firstName Patient first name.
+     * @param lastName Patient last name.
+     * @param nric NRIC value.
+     * @param overrides An Account instance with additional fields to set (not inserted).
+     * @return The inserted Account record.
+     */
+    public static Account createPatientWithDetails(
+        String firstName,
+        String lastName,
+        String nric,
+        Account overrides
+    ) {
+        Id personAccountRTId = Schema.SObjectType.Account.getRecordTypeInfosByName()
+            .get('Person Account').getRecordTypeId();
+
+        Account patient = new Account(
+            RecordTypeId = personAccountRTId,
+            FirstName = firstName,
+            LastName = lastName,
+            NRIC__c = nric
+        );
+
+        // Apply overrides
+        if (overrides.PersonBirthdate != null) { patient.PersonBirthdate = overrides.PersonBirthdate; }
+        if (overrides.PersonEmail != null) { patient.PersonEmail = overrides.PersonEmail; }
+        if (overrides.PersonMobilePhone != null) { patient.PersonMobilePhone = overrides.PersonMobilePhone; }
+        if (overrides.Ethnicity__c != null) { patient.Ethnicity__c = overrides.Ethnicity__c; }
+        if (overrides.Emergency_Contact_Name__c != null) { patient.Emergency_Contact_Name__c = overrides.Emergency_Contact_Name__c; }
+        if (overrides.Emergency_Contact_Phone__c != null) { patient.Emergency_Contact_Phone__c = overrides.Emergency_Contact_Phone__c; }
+        if (overrides.Emergency_Contact_Relationship__c != null) { patient.Emergency_Contact_Relationship__c = overrides.Emergency_Contact_Relationship__c; }
+
+        insert patient;
+        return patient;
+    }
+
+    /**
+     * @description Creates and inserts a HealthCondition linked to a patient.
+     * @param patientId The patient Account Id.
+     * @param problemName Name of the condition.
+     * @param status Condition status (e.g. Active).
+     * @param severity Condition severity.
+     * @param onsetDate When the condition started.
+     * @return The inserted HealthCondition record.
+     */
+    public static HealthCondition createHealthCondition(
+        Id patientId,
+        String problemName,
+        String status,
+        String severity,
+        DateTime onsetDate
+    ) {
+        HealthCondition condition = new HealthCondition(
+            PatientId = patientId,
+            ProblemName = problemName,
+            ConditionStatus = status,
+            Severity = severity,
+            OnsetStartDateTime = onsetDate
+        );
+        insert condition;
+        return condition;
+    }
+
+    /**
+     * @description Creates and inserts a Medication and MedicationStatement linked to a patient.
+     * @param patientId The patient Account Id.
+     * @param medicationName Name of the medication.
+     * @param status Statement status (e.g. Active).
+     * @param startDate When the medication started.
+     * @return The inserted MedicationStatement record.
+     */
+    public static MedicationStatement createMedicationStatement(
+        Id patientId,
+        String medicationName,
+        String status,
+        DateTime startDate
+    ) {
+        Medication med = new Medication(Name = medicationName);
+        insert med;
+
+        MedicationStatement statement = new MedicationStatement(
+            PatientId = patientId,
+            MedicationId = med.Id,
+            Status = status,
+            StartDateTime = startDate
+        );
+        insert statement;
+        return statement;
+    }
+
+    /**
+     * @description Creates and inserts an AllergyIntolerance linked to a patient.
+     * @param patientId The patient Account Id.
+     * @param allergyType Type value (e.g. Allergy).
+     * @param severity Severity level.
+     * @param status Allergy status (e.g. Active).
+     * @return The inserted AllergyIntolerance record.
+     */
+    public static AllergyIntolerance createAllergyIntolerance(
+        Id patientId,
+        String allergyType,
+        String severity,
+        String status
+    ) {
+        AllergyIntolerance allergy = new AllergyIntolerance(
+            PatientId = patientId,
+            Type = allergyType,
+            Severity = severity,
+            Status = status
+        );
+        insert allergy;
+        return allergy;
+    }
+
+    /**
+     * @description Creates and inserts a MemberPlan (insurance) linked to a patient.
+     * @param patientId The patient Account Id.
+     * @param planName Name of the insurance plan.
+     * @param memberNumber Member number.
+     * @param status Plan status.
+     * @param medisaveBalance Medisave balance amount.
+     * @return The inserted MemberPlan record.
+     */
+    public static MemberPlan createMemberPlan(
+        Id patientId,
+        String planName,
+        String memberNumber,
+        String status,
+        Decimal medisaveBalance
+    ) {
+        MemberPlan plan = new MemberPlan(
+            MemberId = patientId,
+            Name = planName,
+            MemberNumber = memberNumber,
+            Status = status,
+            Medisave_Balance__c = medisaveBalance
+        );
+        insert plan;
+        return plan;
+    }
+}

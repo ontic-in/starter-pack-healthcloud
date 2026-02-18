@@ -1,0 +1,183 @@
+/* Patient 360 View - BEM + SLDS Utilities */
+
+:host {
+    --color-badge-danger: #c23934;
+    --color-badge-warning: #fe9339;
+    --color-badge-success: #2e844a;
+    --color-badge-active: #0176d3;
+    --color-badge-inactive: #747474;
+    --color-section-border: #e5e5e5;
+    --color-row-hover: #f3f3f3;
+    --color-text-secondary: #444444;
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+}
+
+/* Block */
+.patient360 {
+    padding: var(--spacing-md);
+}
+
+/* Section */
+.patient360__section {
+    border: 1px solid var(--color-section-border);
+    border-radius: 0.25rem;
+    margin-bottom: var(--spacing-md);
+    background: #ffffff;
+}
+
+.patient360__section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: #fafaf9;
+    border-bottom: 1px solid var(--color-section-border);
+    cursor: pointer;
+}
+
+.patient360__section-header:hover {
+    background: var(--color-row-hover);
+}
+
+.patient360__section-title {
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.025rem;
+    color: var(--color-text-secondary);
+    margin: 0;
+}
+
+.patient360__section-count {
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+    background: var(--color-section-border);
+    padding: 0.125rem 0.5rem;
+    border-radius: 1rem;
+}
+
+.patient360__section-body {
+    padding: var(--spacing-md);
+}
+
+/* Demographics grid */
+.patient360__demographics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-sm) var(--spacing-lg);
+}
+
+.patient360__field {
+    display: flex;
+    flex-direction: column;
+}
+
+.patient360__field-label {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.patient360__field-value {
+    font-size: 0.8125rem;
+}
+
+/* Table rows */
+.patient360__table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.patient360__table-header {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+    text-align: left;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-bottom: 1px solid var(--color-section-border);
+}
+
+.patient360__table-row {
+    cursor: pointer;
+}
+
+.patient360__table-row:hover {
+    background: var(--color-row-hover);
+}
+
+.patient360__table-cell {
+    padding: var(--spacing-sm);
+    font-size: 0.8125rem;
+    border-bottom: 1px solid var(--color-section-border);
+}
+
+/* Badges */
+.patient360__badge {
+    display: inline-block;
+    padding: 0.125rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.patient360__badge--danger {
+    background: #fce4e4;
+    color: var(--color-badge-danger);
+}
+
+.patient360__badge--warning {
+    background: #fef0e1;
+    color: var(--color-badge-warning);
+}
+
+.patient360__badge--success {
+    background: #e6f5ec;
+    color: var(--color-badge-success);
+}
+
+.patient360__badge--active {
+    background: #e1f1fd;
+    color: var(--color-badge-active);
+}
+
+.patient360__badge--inactive {
+    background: #f0f0f0;
+    color: var(--color-badge-inactive);
+}
+
+/* Empty state */
+.patient360__empty {
+    text-align: center;
+    padding: var(--spacing-md);
+    color: var(--color-text-secondary);
+    font-size: 0.8125rem;
+    font-style: italic;
+}
+
+/* Error state */
+.patient360__error {
+    padding: var(--spacing-md);
+    color: var(--color-badge-danger);
+    background: #fce4e4;
+    border-radius: 0.25rem;
+    font-size: 0.8125rem;
+}
+
+/* Responsive: tablet/mobile */
+@media (max-width: 768px) {
+    .patient360__demographics-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .patient360__section-body {
+        padding: var(--spacing-sm);
+        overflow-x: auto;
+    }
+}
