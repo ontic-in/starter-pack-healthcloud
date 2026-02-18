@@ -20,7 +20,7 @@
 
                 <!-- Demographics Section -->
                 <div class="patient360__section">
-                    <div class="patient360__section-header" data-record-id={recordId} onclick={navigateToRecord}>
+                    <div class="patient360__section-header" data-record-id={recordId} onclick={navigateToRecord} onkeydown={handleKeydown} tabindex="0" role="link">
                         <h3 class="patient360__section-title">Demographics</h3>
                     </div>
                     <div class="patient360__section-body">
@@ -49,22 +49,24 @@
                                 <span class="patient360__field-label">Email</span>
                                 <span class="patient360__field-value">{demographics.PersonEmail}</span>
                             </div>
-                            <div class="patient360__field">
-                                <span class="patient360__field-label">Emergency Contact</span>
-                                <span class="patient360__field-value">{demographics.Emergency_Contact_Name__c} ({demographics.Emergency_Contact_Relationship__c})</span>
-                            </div>
-                            <div class="patient360__field">
-                                <span class="patient360__field-label">Emergency Phone</span>
-                                <span class="patient360__field-value">{demographics.Emergency_Contact_Phone__c}</span>
-                            </div>
+                            <template lwc:if={hasEmergencyContact}>
+                                <div class="patient360__field">
+                                    <span class="patient360__field-label">Emergency Contact</span>
+                                    <span class="patient360__field-value">{emergencyContactDisplay}</span>
+                                </div>
+                                <div class="patient360__field">
+                                    <span class="patient360__field-label">Emergency Phone</span>
+                                    <span class="patient360__field-value">{demographics.Emergency_Contact_Phone__c}</span>
+                                </div>
+                            </template>
                         </div>
                     </div>
                 </div>
 
                 <!-- Conditions Section -->
                 <div class="patient360__section">
-                    <div class="patient360__section-header" data-related-list="HealthConditions" onclick={navigateToRelatedList}>
-                        <h3 class="patient360__section-title">Active Conditions</h3>
+                    <div class="patient360__section-header" data-related-list="HealthConditions" onclick={navigateToRelatedList} onkeydown={handleKeydown} tabindex="0" role="link">
+                        <h3 class="patient360__section-title">Conditions</h3>
                         <template lwc:if={hasConditions}>
                             <span class="patient360__section-count">{conditions.length}</span>
                         </template>
@@ -82,7 +84,7 @@
                                 </thead>
                                 <tbody>
                                     <template for:each={conditions} for:item="condition">
-                                        <tr key={condition.Id} class="patient360__table-row" data-record-id={condition.Id} onclick={navigateToRecord}>
+                                        <tr key={condition.Id} class="patient360__table-row" data-record-id={condition.Id} onclick={navigateToRecord} onkeydown={handleKeydown} tabindex="0" role="link">
                                             <td class="patient360__table-cell">{condition.ProblemName}</td>
                                             <td class="patient360__table-cell">
                                                 <span class={condition.statusClass}>{condition.ConditionStatus}</span>
@@ -104,7 +106,7 @@
 
                 <!-- Medications Section -->
                 <div class="patient360__section">
-                    <div class="patient360__section-header" data-related-list="MedicationStatements" onclick={navigateToRelatedList}>
+                    <div class="patient360__section-header" data-related-list="MedicationStatements" onclick={navigateToRelatedList} onkeydown={handleKeydown} tabindex="0" role="link">
                         <h3 class="patient360__section-title">Medications</h3>
                         <template lwc:if={hasMedications}>
                             <span class="patient360__section-count">{medications.length}</span>
@@ -122,7 +124,7 @@
                                 </thead>
                                 <tbody>
                                     <template for:each={medications} for:item="medication">
-                                        <tr key={medication.Id} class="patient360__table-row" data-record-id={medication.Id} onclick={navigateToRecord}>
+                                        <tr key={medication.Id} class="patient360__table-row" data-record-id={medication.Id} onclick={navigateToRecord} onkeydown={handleKeydown} tabindex="0" role="link">
                                             <td class="patient360__table-cell">{medication.medicationName}</td>
                                             <td class="patient360__table-cell">
                                                 <span class={medication.statusClass}>{medication.Status}</span>
@@ -141,7 +143,7 @@
 
                 <!-- Allergies Section -->
                 <div class="patient360__section">
-                    <div class="patient360__section-header" data-related-list="AllergyIntolerances" onclick={navigateToRelatedList}>
+                    <div class="patient360__section-header" data-related-list="AllergyIntolerances" onclick={navigateToRelatedList} onkeydown={handleKeydown} tabindex="0" role="link">
                         <h3 class="patient360__section-title">Allergies</h3>
                         <template lwc:if={hasAllergies}>
                             <span class="patient360__section-count">{allergies.length}</span>
@@ -160,7 +162,7 @@
                                 </thead>
                                 <tbody>
                                     <template for:each={allergies} for:item="allergy">
-                                        <tr key={allergy.Id} class="patient360__table-row" data-record-id={allergy.Id} onclick={navigateToRecord}>
+                                        <tr key={allergy.Id} class="patient360__table-row" data-record-id={allergy.Id} onclick={navigateToRecord} onkeydown={handleKeydown} tabindex="0" role="link">
                                             <td class="patient360__table-cell">{allergy.Name}</td>
                                             <td class="patient360__table-cell">{allergy.Type}</td>
                                             <td class="patient360__table-cell">
@@ -182,7 +184,7 @@
 
                 <!-- Insurance Section -->
                 <div class="patient360__section">
-                    <div class="patient360__section-header" data-related-list="MemberPlans" onclick={navigateToRelatedList}>
+                    <div class="patient360__section-header" data-related-list="MemberPlans" onclick={navigateToRelatedList} onkeydown={handleKeydown} tabindex="0" role="link">
                         <h3 class="patient360__section-title">Insurance</h3>
                         <template lwc:if={hasInsurance}>
                             <span class="patient360__section-count">{insurance.length}</span>
@@ -201,7 +203,7 @@
                                 </thead>
                                 <tbody>
                                     <template for:each={insurance} for:item="plan">
-                                        <tr key={plan.Id} class="patient360__table-row" data-record-id={plan.Id} onclick={navigateToRecord}>
+                                        <tr key={plan.Id} class="patient360__table-row" data-record-id={plan.Id} onclick={navigateToRecord} onkeydown={handleKeydown} tabindex="0" role="link">
                                             <td class="patient360__table-cell">{plan.Name}</td>
                                             <td class="patient360__table-cell">{plan.MemberNumber}</td>
                                             <td class="patient360__table-cell">

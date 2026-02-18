@@ -89,12 +89,29 @@ export default class Patient360View extends NavigationMixin(LightningElement) {
         return this.insurance && this.insurance.length > 0;
     }
 
+    get hasEmergencyContact() {
+        return !!this.demographics?.Emergency_Contact_Name__c;
+    }
+
+    get emergencyContactDisplay() {
+        const name = this.demographics?.Emergency_Contact_Name__c || '';
+        const relationship = this.demographics?.Emergency_Contact_Relationship__c;
+        return relationship ? `${name} (${relationship})` : name;
+    }
+
     get formattedDob() {
         if (!this.demographics?.PersonBirthdate) return '';
         return this.formatDate(this.demographics.PersonBirthdate);
     }
 
     // --- Navigation handlers ---
+
+    handleKeydown(event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            event.currentTarget.click();
+        }
+    }
 
     navigateToRecord(event) {
         const recordId = event.currentTarget.dataset.recordId;

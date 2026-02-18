@@ -38,7 +38,7 @@ public with sharing class Patient360Controller {
         ];
 
         if (accounts.isEmpty()) {
-            throw new AuraHandledException('Patient record not found for ID: ' + accountId);
+            throw new AuraHandledException('Patient record not found.');
         }
 
         result.demographics = accounts[0];
@@ -50,6 +50,7 @@ public with sharing class Patient360Controller {
             WHERE PatientId = :accountId
             WITH SECURITY_ENFORCED
             ORDER BY OnsetStartDateTime DESC
+            LIMIT 50
         ];
 
         result.medications = [
@@ -59,6 +60,7 @@ public with sharing class Patient360Controller {
             WHERE PatientId = :accountId
             WITH SECURITY_ENFORCED
             ORDER BY StartDateTime DESC
+            LIMIT 50
         ];
 
         result.allergies = [
@@ -67,6 +69,7 @@ public with sharing class Patient360Controller {
             WHERE PatientId = :accountId
             WITH SECURITY_ENFORCED
             ORDER BY CreatedDate DESC
+            LIMIT 50
         ];
 
         result.insurance = [
@@ -76,6 +79,7 @@ public with sharing class Patient360Controller {
             WHERE MemberId = :accountId
             WITH SECURITY_ENFORCED
             ORDER BY CreatedDate DESC
+            LIMIT 50
         ];
 
         return result;
