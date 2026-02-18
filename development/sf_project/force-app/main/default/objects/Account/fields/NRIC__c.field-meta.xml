@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>NRIC__c</fullName>
+    <label>NRIC</label>
+    <type>Text</type>
+    <length>9</length>
+    <required>false</required>
+    <unique>true</unique>
+    <caseSensitive>false</caseSensitive>
+    <externalId>true</externalId>
+    <description>Singapore National Registration Identity Card number</description>
+    <inlineHelpText>Enter the patient NRIC (e.g., S1234567A)</inlineHelpText>
+</CustomField>
