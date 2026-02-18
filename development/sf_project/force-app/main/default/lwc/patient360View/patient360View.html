@@ -1,0 +1,226 @@
+<template>
+    <lightning-card title="Patient 360" icon-name="standard:patient">
+
+        <!-- Loading spinner -->
+        <template lwc:if={isLoading}>
+            <lightning-spinner alternative-text="Loading patient data" size="medium"></lightning-spinner>
+        </template>
+
+        <!-- Error state -->
+        <template lwc:if={error}>
+            <div class="patient360__error">
+                <lightning-icon icon-name="utility:error" size="x-small" variant="error"></lightning-icon>
+                &nbsp;{error}
+            </div>
+        </template>
+
+        <!-- Patient data -->
+        <template lwc:if={patientData}>
+            <div class="patient360">
+
+                <!-- Demographics Section -->
+                <div class="patient360__section">
+                    <div class="patient360__section-header" data-record-id={recordId} onclick={navigateToRecord}>
+                        <h3 class="patient360__section-title">Demographics</h3>
+                    </div>
+                    <div class="patient360__section-body">
+                        <div class="patient360__demographics-grid">
+                            <div class="patient360__field">
+                                <span class="patient360__field-label">Full Name</span>
+                                <span class="patient360__field-value">{demographics.FirstName} {demographics.LastName}</span>
+                            </div>
+                            <div class="patient360__field">
+                                <span class="patient360__field-label">NRIC</span>
+                                <span class="patient360__field-value">{demographics.NRIC__c}</span>
+                            </div>
+                            <div class="patient360__field">
+                                <span class="patient360__field-label">Date of Birth</span>
+                                <span class="patient360__field-value">{formattedDob}</span>
+                            </div>
+                            <div class="patient360__field">
+                                <span class="patient360__field-label">Ethnicity</span>
+                                <span class="patient360__field-value">{demographics.Ethnicity__c}</span>
+                            </div>
+                            <div class="patient360__field">
+                                <span class="patient360__field-label">Mobile</span>
+                                <span class="patient360__field-value">{demographics.PersonMobilePhone}</span>
+                            </div>
+                            <div class="patient360__field">
+                                <span class="patient360__field-label">Email</span>
+                                <span class="patient360__field-value">{demographics.PersonEmail}</span>
+                            </div>
+                            <div class="patient360__field">
+                                <span class="patient360__field-label">Emergency Contact</span>
+                                <span class="patient360__field-value">{demographics.Emergency_Contact_Name__c} ({demographics.Emergency_Contact_Relationship__c})</span>
+                            </div>
+                            <div class="patient360__field">
+                                <span class="patient360__field-label">Emergency Phone</span>
+                                <span class="patient360__field-value">{demographics.Emergency_Contact_Phone__c}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Conditions Section -->
+                <div class="patient360__section">
+                    <div class="patient360__section-header" data-related-list="HealthConditions" onclick={navigateToRelatedList}>
+                        <h3 class="patient360__section-title">Active Conditions</h3>
+                        <template lwc:if={hasConditions}>
+                            <span class="patient360__section-count">{conditions.length}</span>
+                        </template>
+                    </div>
+                    <div class="patient360__section-body">
+                        <template lwc:if={hasConditions}>
+                            <table class="patient360__table">
+                                <thead>
+                                    <tr>
+                                        <th class="patient360__table-header">Condition</th>
+                                        <th class="patient360__table-header">Status</th>
+                                        <th class="patient360__table-header">Severity</th>
+                                        <th class="patient360__table-header">Onset Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template for:each={conditions} for:item="condition">
+                                        <tr key={condition.Id} class="patient360__table-row" data-record-id={condition.Id} onclick={navigateToRecord}>
+                                            <td class="patient360__table-cell">{condition.ProblemName}</td>
+                                            <td class="patient360__table-cell">
+                                                <span class={condition.statusClass}>{condition.ConditionStatus}</span>
+                                            </td>
+                                            <td class="patient360__table-cell">
+                                                <span class={condition.severityClass}>{condition.Severity}</span>
+                                            </td>
+                                            <td class="patient360__table-cell">{condition.formattedOnsetDate}</td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </template>
+                        <template lwc:else>
+                            <div class="patient360__empty">No conditions recorded</div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Medications Section -->
+                <div class="patient360__section">
+                    <div class="patient360__section-header" data-related-list="MedicationStatements" onclick={navigateToRelatedList}>
+                        <h3 class="patient360__section-title">Medications</h3>
+                        <template lwc:if={hasMedications}>
+                            <span class="patient360__section-count">{medications.length}</span>
+                        </template>
+                    </div>
+                    <div class="patient360__section-body">
+                        <template lwc:if={hasMedications}>
+                            <table class="patient360__table">
+                                <thead>
+                                    <tr>
+                                        <th class="patient360__table-header">Medication</th>
+                                        <th class="patient360__table-header">Status</th>
+                                        <th class="patient360__table-header">Start Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template for:each={medications} for:item="medication">
+                                        <tr key={medication.Id} class="patient360__table-row" data-record-id={medication.Id} onclick={navigateToRecord}>
+                                            <td class="patient360__table-cell">{medication.medicationName}</td>
+                                            <td class="patient360__table-cell">
+                                                <span class={medication.statusClass}>{medication.Status}</span>
+                                            </td>
+                                            <td class="patient360__table-cell">{medication.formattedStartDate}</td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </template>
+                        <template lwc:else>
+                            <div class="patient360__empty">No medications recorded</div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Allergies Section -->
+                <div class="patient360__section">
+                    <div class="patient360__section-header" data-related-list="AllergyIntolerances" onclick={navigateToRelatedList}>
+                        <h3 class="patient360__section-title">Allergies</h3>
+                        <template lwc:if={hasAllergies}>
+                            <span class="patient360__section-count">{allergies.length}</span>
+                        </template>
+                    </div>
+                    <div class="patient360__section-body">
+                        <template lwc:if={hasAllergies}>
+                            <table class="patient360__table">
+                                <thead>
+                                    <tr>
+                                        <th class="patient360__table-header">Allergen</th>
+                                        <th class="patient360__table-header">Type</th>
+                                        <th class="patient360__table-header">Severity</th>
+                                        <th class="patient360__table-header">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template for:each={allergies} for:item="allergy">
+                                        <tr key={allergy.Id} class="patient360__table-row" data-record-id={allergy.Id} onclick={navigateToRecord}>
+                                            <td class="patient360__table-cell">{allergy.Name}</td>
+                                            <td class="patient360__table-cell">{allergy.Type}</td>
+                                            <td class="patient360__table-cell">
+                                                <span class={allergy.severityClass}>{allergy.Severity}</span>
+                                            </td>
+                                            <td class="patient360__table-cell">
+                                                <span class={allergy.statusClass}>{allergy.Status}</span>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </template>
+                        <template lwc:else>
+                            <div class="patient360__empty">No allergies recorded</div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Insurance Section -->
+                <div class="patient360__section">
+                    <div class="patient360__section-header" data-related-list="MemberPlans" onclick={navigateToRelatedList}>
+                        <h3 class="patient360__section-title">Insurance</h3>
+                        <template lwc:if={hasInsurance}>
+                            <span class="patient360__section-count">{insurance.length}</span>
+                        </template>
+                    </div>
+                    <div class="patient360__section-body">
+                        <template lwc:if={hasInsurance}>
+                            <table class="patient360__table">
+                                <thead>
+                                    <tr>
+                                        <th class="patient360__table-header">Plan</th>
+                                        <th class="patient360__table-header">Member No.</th>
+                                        <th class="patient360__table-header">Status</th>
+                                        <th class="patient360__table-header">Medisave Balance</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template for:each={insurance} for:item="plan">
+                                        <tr key={plan.Id} class="patient360__table-row" data-record-id={plan.Id} onclick={navigateToRecord}>
+                                            <td class="patient360__table-cell">{plan.Name}</td>
+                                            <td class="patient360__table-cell">{plan.MemberNumber}</td>
+                                            <td class="patient360__table-cell">
+                                                <span class={plan.statusClass}>{plan.Status}</span>
+                                            </td>
+                                            <td class="patient360__table-cell">{plan.formattedBalance}</td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </template>
+                        <template lwc:else>
+                            <div class="patient360__empty">No insurance plans recorded</div>
+                        </template>
+                    </div>
+                </div>
+
+            </div>
+        </template>
+
+    </lightning-card>
+</template>
