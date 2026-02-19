@@ -1,0 +1,314 @@
+<template>
+    <section class="templateEditor__modal" role="dialog" aria-modal="true" aria-label={modalTitle}>
+        <div class="templateEditor__backdrop" onclick={handleClose}></div>
+        <div class="templateEditor__container">
+
+            <!-- Header -->
+            <header class="templateEditor__header">
+                <div class="templateEditor__headerLeft">
+                    <h2 class="templateEditor__title">{modalTitle}</h2>
+                    <template lwc:if={versionDisplay}>
+                        <span class="templateEditor__version">{versionDisplay}</span>
+                    </template>
+                </div>
+                <lightning-button-icon
+                    icon-name="utility:close"
+                    alternative-text="Close"
+                    onclick={handleClose}
+                    variant="bare-inverse">
+                </lightning-button-icon>
+            </header>
+
+            <!-- Loading -->
+            <template lwc:if={isLoading}>
+                <div class="templateEditor__spinner">
+                    <lightning-spinner alternative-text="Processing..." size="medium">
+                    </lightning-spinner>
+                </div>
+            </template>
+
+            <!-- Error -->
+            <template lwc:if={hasError}>
+                <div class="templateEditor__error">
+                    <lightning-icon icon-name="utility:error" size="small" variant="error">
+                    </lightning-icon>
+                    <span class="slds-m-left_x-small">{errorMessage}</span>
+                </div>
+            </template>
+
+            <!-- Body -->
+            <div class="templateEditor__body">
+
+                <!-- Template Fields -->
+                <div class="templateEditor__section">
+                    <h3 class="templateEditor__sectionTitle">Template Details</h3>
+
+                    <template lwc:if={isViewMode}>
+                        <div class="templateEditor__fieldGrid">
+                            <div class="templateEditor__field">
+                                <span class="templateEditor__fieldLabel">Name</span>
+                                <span class="templateEditor__fieldValue">{templateName}</span>
+                            </div>
+                            <div class="templateEditor__field">
+                                <span class="templateEditor__fieldLabel">ICD-10 Code</span>
+                                <span class="templateEditor__fieldValue">{icd10Code}</span>
+                            </div>
+                            <div class="templateEditor__field templateEditor__field--full">
+                                <span class="templateEditor__fieldLabel">Description</span>
+                                <span class="templateEditor__fieldValue">{templateDescription}</span>
+                            </div>
+                            <div class="templateEditor__field templateEditor__field--full">
+                                <span class="templateEditor__fieldLabel">MOH Guideline</span>
+                                <span class="templateEditor__fieldValue">{mohGuidelineRef}</span>
+                            </div>
+                        </div>
+                    </template>
+
+                    <template lwc:if={isEditable}>
+                        <div class="templateEditor__fieldGrid">
+                            <div class="templateEditor__field">
+                                <lightning-input
+                                    label="Template Name"
+                                    value={templateName}
+                                    data-field="name"
+                                    onchange={handleFieldChange}
+                                    required>
+                                </lightning-input>
+                            </div>
+                            <div class="templateEditor__field">
+                                <lightning-input
+                                    label="ICD-10 Code"
+                                    value={icd10Code}
+                                    data-field="icd10"
+                                    onchange={handleFieldChange}
+                                    placeholder="e.g., E11">
+                                </lightning-input>
+                            </div>
+                            <div class="templateEditor__field templateEditor__field--full">
+                                <lightning-textarea
+                                    label="Description"
+                                    value={templateDescription}
+                                    data-field="description"
+                                    onchange={handleFieldChange}>
+                                </lightning-textarea>
+                            </div>
+                            <div class="templateEditor__field templateEditor__field--full">
+                                <lightning-input
+                                    label="MOH Guideline URL"
+                                    type="url"
+                                    value={mohGuidelineRef}
+                                    data-field="moh"
+                                    onchange={handleFieldChange}>
+                                </lightning-input>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Goals Section -->
+                <div class="templateEditor__section">
+                    <div class="templateEditor__sectionHeader">
+                        <h3 class="templateEditor__sectionTitle">
+                            Goals
+                            <span class="templateEditor__badge">{goalCount}</span>
+                        </h3>
+                        <template lwc:if={isEditable}>
+                            <lightning-button
+                                label="Add Goal"
+                                icon-name="utility:add"
+                                onclick={handleToggleAddGoal}
+                                size="small">
+                            </lightning-button>
+                        </template>
+                    </div>
+
+                    <!-- Add Goal Form -->
+                    <template lwc:if={showAddGoal}>
+                        <div class="templateEditor__addForm">
+                            <div class="templateEditor__addFormGrid">
+                                <lightning-input label="Goal Name" data-field="name"
+                                    onchange={handleNewGoalChange} required>
+                                </lightning-input>
+                                <lightning-input label="Target Value" data-field="target"
+                                    onchange={handleNewGoalChange} placeholder="e.g., < 7.0%">
+                                </lightning-input>
+                                <lightning-input label="Measure" data-field="measure"
+                                    onchange={handleNewGoalChange} placeholder="e.g., HbA1c blood test">
+                                </lightning-input>
+                                <lightning-combobox label="Review Frequency" data-field="frequency"
+                                    options={reviewFrequencyOptions}
+                                    onchange={handleNewGoalChange}>
+                                </lightning-combobox>
+                            </div>
+                            <div class="templateEditor__addFormActions">
+                                <lightning-button label="Cancel" onclick={handleToggleAddGoal}>
+                                </lightning-button>
+                                <lightning-button label="Save Goal" variant="brand"
+                                    onclick={handleSaveNewGoal}>
+                                </lightning-button>
+                            </div>
+                        </div>
+                    </template>
+
+                    <template lwc:if={hasGoals}>
+                        <table class="templateEditor__table">
+                            <thead>
+                                <tr>
+                                    <th>Goal</th>
+                                    <th>Target</th>
+                                    <th>Measure</th>
+                                    <th>Review</th>
+                                    <template lwc:if={isEditable}>
+                                        <th></th>
+                                    </template>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={goals} for:item="goal">
+                                    <tr key={goal.Id}>
+                                        <td class="templateEditor__cellName">{goal.Name}</td>
+                                        <td>{goal.Target_Value__c}</td>
+                                        <td>{goal.Measure__c}</td>
+                                        <td>{goal.Review_Frequency__c}</td>
+                                        <template lwc:if={isEditable}>
+                                            <td>
+                                                <lightning-button-icon
+                                                    icon-name="utility:delete"
+                                                    alternative-text="Remove"
+                                                    data-id={goal.Id}
+                                                    onclick={handleDeleteGoal}
+                                                    variant="bare"
+                                                    size="small">
+                                                </lightning-button-icon>
+                                            </td>
+                                        </template>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </template>
+
+                    <template lwc:if={!hasGoals}>
+                        <p class="templateEditor__emptySection">No goals defined for this template.</p>
+                    </template>
+                </div>
+
+                <!-- Tasks Section -->
+                <div class="templateEditor__section">
+                    <div class="templateEditor__sectionHeader">
+                        <h3 class="templateEditor__sectionTitle">
+                            Tasks
+                            <span class="templateEditor__badge">{taskCount}</span>
+                        </h3>
+                        <template lwc:if={isEditable}>
+                            <lightning-button
+                                label="Add Task"
+                                icon-name="utility:add"
+                                onclick={handleToggleAddTask}
+                                size="small">
+                            </lightning-button>
+                        </template>
+                    </div>
+
+                    <!-- Add Task Form -->
+                    <template lwc:if={showAddTask}>
+                        <div class="templateEditor__addForm">
+                            <div class="templateEditor__addFormGrid">
+                                <lightning-input label="Task Name" data-field="subject"
+                                    onchange={handleNewTaskChange} required>
+                                </lightning-input>
+                                <lightning-combobox label="Assigned Role" data-field="role"
+                                    options={roleOptions}
+                                    onchange={handleNewTaskChange}>
+                                </lightning-combobox>
+                                <lightning-combobox label="Frequency" data-field="frequency"
+                                    options={frequencyOptions}
+                                    onchange={handleNewTaskChange}>
+                                </lightning-combobox>
+                                <lightning-combobox label="Priority" data-field="priority"
+                                    options={priorityOptions}
+                                    value="Medium"
+                                    onchange={handleNewTaskChange}>
+                                </lightning-combobox>
+                            </div>
+                            <div class="templateEditor__addFormActions">
+                                <lightning-button label="Cancel" onclick={handleToggleAddTask}>
+                                </lightning-button>
+                                <lightning-button label="Save Task" variant="brand"
+                                    onclick={handleSaveNewTask}>
+                                </lightning-button>
+                            </div>
+                        </div>
+                    </template>
+
+                    <template lwc:if={hasTasks}>
+                        <table class="templateEditor__table">
+                            <thead>
+                                <tr>
+                                    <th>Task</th>
+                                    <th>Role</th>
+                                    <th>Frequency</th>
+                                    <th>Priority</th>
+                                    <template lwc:if={isEditable}>
+                                        <th></th>
+                                    </template>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={tasks} for:item="task">
+                                    <tr key={task.Id}>
+                                        <td class="templateEditor__cellName">{task.Subject}</td>
+                                        <td>{task.Assigned_Role__c}</td>
+                                        <td>{task.Task_Frequency__c}</td>
+                                        <td>{task.Priority}</td>
+                                        <template lwc:if={isEditable}>
+                                            <td>
+                                                <lightning-button-icon
+                                                    icon-name="utility:delete"
+                                                    alternative-text="Remove"
+                                                    data-id={task.Id}
+                                                    onclick={handleDeleteTask}
+                                                    variant="bare"
+                                                    size="small">
+                                                </lightning-button-icon>
+                                            </td>
+                                        </template>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </template>
+
+                    <template lwc:if={!hasTasks}>
+                        <p class="templateEditor__emptySection">No tasks defined for this template.</p>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <footer class="templateEditor__footer">
+                <lightning-button label="Close" onclick={handleClose}>
+                </lightning-button>
+                <div class="templateEditor__footerRight">
+                    <template lwc:if={isViewMode}>
+                        <lightning-button label="Edit" variant="neutral"
+                            onclick={handleSwitchToEdit}>
+                        </lightning-button>
+                    </template>
+                    <template lwc:if={isEditMode}>
+                        <lightning-button label="New Version" variant="neutral"
+                            icon-name="utility:copy"
+                            onclick={handleNewVersion}>
+                        </lightning-button>
+                    </template>
+                    <template lwc:if={isEditable}>
+                        <lightning-button label="Save Template" variant="brand"
+                            onclick={handleSaveTemplate}>
+                        </lightning-button>
+                    </template>
+                </div>
+            </footer>
+
+        </div>
+    </section>
+</template>

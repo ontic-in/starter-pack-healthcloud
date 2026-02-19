@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Previous_Version__c</fullName>
+    <label>Previous Version</label>
+    <type>Lookup</type>
+    <referenceTo>CarePlanTemplate</referenceTo>
+    <relationshipName>NewerVersions</relationshipName>
+    <relationshipLabel>Newer Versions</relationshipLabel>
+    <required>false</required>
+    <description>Links to the previous version of this template for version chain tracking.</description>
+    <inlineHelpText>The prior version this template was cloned from</inlineHelpText>
+</CustomField>
