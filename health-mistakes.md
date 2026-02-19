@@ -1,4 +1,10 @@
-# Implementation Mistakes & Learnings - [US-1.1.2] Patient 360 View
+# Implementation Mistakes & Learnings - Health Cloud Starter Pack
+
+This file tracks mistakes and learnings across all tickets for continuous improvement.
+
+---
+
+# [US-1.1.2] Patient 360 View
 
 **Ticket**: https://app.clickup.com/t/86d1yxw5r
 **Date**: 2026-02-18
@@ -88,7 +94,7 @@ for (String f : fields.keySet()) {
 
 ---
 
-## Summary
+## Summary (US-1.1.2)
 
 | # | Mistake | Severity | Time Lost |
 |---|---------|----------|-----------|
@@ -106,7 +112,7 @@ for (String f : fields.keySet()) {
 ---
 ---
 
-# Implementation Mistakes & Learnings - [US-1.1.3] Patient Timeline
+# [US-1.1.3] Patient Timeline - Implementation
 
 **Ticket**: https://app.clickup.com/t/86d1yxw5w
 **Date**: 2026-02-18
@@ -183,7 +189,7 @@ for (String f : fields.keySet()) {
 
 ---
 
-## Summary (US-1.1.3)
+## Summary (US-1.1.3 Implementation)
 
 | # | Mistake | Severity | Time Lost |
 |---|---------|----------|-----------|
@@ -203,7 +209,7 @@ for (String f : fields.keySet()) {
 ---
 ---
 
-# Implementation Mistakes & Learnings - [US-1.1.3] PR Review Fixes
+# [US-1.1.3] Patient Timeline - PR Review Fixes
 
 **Ticket**: https://app.clickup.com/t/86d1yxw5w
 **Date**: 2026-02-19
@@ -265,3 +271,253 @@ for (String f : fields.keySet()) {
 - Person Account WhoId pattern (querying PersonContactId for Task/Event lookups) is a core Health Cloud pattern that must be applied every time.
 - Always use SLDS design tokens in CSS, never raw hex colors.
 - Always use `undefined` (browser default) for locale in `toLocaleDateString`/`toLocaleTimeString`, never hardcode a specific locale.
+
+---
+---
+
+# [US-1.1.4] Patient Search & Duplicate Detection - Implementation
+
+**Ticket**: https://app.clickup.com/t/86d1yxw61
+**Date**: 2026-02-19
+
+---
+
+## Mistake 14: ClickUp Status Name Mismatch (Repeat)
+
+**What happened**: Tried to set ticket status to `"in development"` but the workspace uses `"in progress"`. Same mistake as US-1.1.2 Mistake #2.
+
+**Error**: ClickUp API rejected the status value.
+
+**Impact**: Low - extra API call to discover correct status names.
+
+**Fix**: Queried list statuses via `clickup.workspace.getHierarchy()` and found the correct status name.
+
+**Prevention**: This is now a **known pattern**. Always query available statuses before updating. The workspace uses: `to do`, `in progress`, `ready for pr`, `complete` (not "in development", "done", etc.).
+
+**Repeat of**: Mistake #2. Need to internalize the workspace status vocabulary.
+
+---
+
+## Mistake 15: ClickUp findMember() Returns Null for Display Names
+
+**What happened**: Called `clickup.workspace.findMember('das.animesh')` expecting it to match by username/email. It returned null.
+
+**Impact**: Low - had to fetch all members and search manually.
+
+**Fix**: Used `clickup.workspace.getMembers()` then filtered the raw JSON for "animesh" to find member ID `100968061`.
+
+**Prevention**: `findMember()` may not match on all name formats. When assigning users, use `getMembers()` and search by partial name match. Cache the member ID once found (Animesh Das = `100968061`).
+
+---
+
+## Mistake 16: Git safe.directory Ownership Error
+
+**What happened**: Running `git checkout main` failed with `fatal: detected dubious ownership in repository`.
+
+**Error**: `fatal: detected dubious ownership in repository at '/home/dev/workspace/starter-pack-healthcloud'`
+
+**Impact**: Low - one-time fix per session.
+
+**Fix**: `git config --global --add safe.directory /home/dev/workspace/starter-pack-healthcloud`
+
+**Prevention**: This happens in container environments where the repo is mounted with different ownership. Add safe.directory config at session start if git commands fail.
+
+---
+
+## Mistake 17: Apex Syntax Checker False Positives on Multi-line SOQL
+
+**What happened**: The local `apex_syntax_check` tool reported errors on multi-line SOQL queries in Apex classes (e.g., `PatientSearchController.cls`). Verified by checking the already-deployed `Patient360Controller.cls` which shows the same "errors" but works fine in the org.
+
+**Impact**: Medium - caused initial concern about code correctness, required verification against known-good code.
+
+**Fix**: Confirmed this is a tool limitation, not a code issue. The ANTLR-based local parser doesn't handle multi-line SOQL the same way the Salesforce compiler does.
+
+**Prevention**: Don't rely solely on `apex_syntax_check` for SOQL validation. If it reports errors only on multi-line SOQL (especially around `FROM`, `WHERE` on separate lines), cross-reference with existing deployed classes. The real validation is `sf project deploy`.
+
+---
+
+## Mistake 18: Git Index Lock File (Repeat)
+
+**What happened**: Got `fatal: Unable to create '.git/index.lock': File exists` when staging files. Same as US-1.1.2 Mistake #5.
+
+**Fix**: `rm -f .git/index.lock`
+
+**Prevention**: Common in container/shared environments. Check for and remove stale lock files if git operations fail.
+
+**Repeat of**: Mistake #5.
+
+---
+
+## Mistake 19: Plan File Permission Denied
+
+**What happened**: Attempted to write the implementation plan to `/home/exo/.claude/plans/` but got permission denied.
+
+**Impact**: Low - wrote plan to `.exo/plan-86d1yxw61.md` instead.
+
+**Fix**: Used the project-local `.exo/` directory for plan files.
+
+**Prevention**: Always write plan files to the project `.exo/` directory, not to system paths. The `/home/exo/` directory has restricted permissions.
+
+---
+
+## Mistake 20: GitHub Username != ClickUp Username
+
+**What happened**: Tried to assign PR to `das.animesh` (the ClickUp display name format) on GitHub. GitHub returned `'das.animesh' not found`. The actual GitHub username is `animeshdas738`.
+
+**Impact**: Low - had to list repo collaborators to find the correct username.
+
+**Fix**: Ran `gh api repos/.../collaborators --jq '.[].login'` to list all collaborators, found `animeshdas738`.
+
+**Prevention**: ClickUp usernames and GitHub usernames are different systems. Always verify the GitHub username via `gh api repos/<owner>/<repo>/collaborators` before assigning PRs. Known mapping: **Animesh Das** = ClickUp ID `100968061` / GitHub `animeshdas738`.
+
+---
+
+## Summary (US-1.1.4 Implementation)
+
+| # | Mistake | Severity | Time Lost | Repeat? |
+|---|---------|----------|-----------|---------|
+| 14 | ClickUp status name wrong | Low | ~1 min | Yes (#2) |
+| 15 | findMember() null for display names | Low | ~2 min | No |
+| 16 | Git safe.directory ownership | Low | ~30 sec | No |
+| 17 | Apex syntax checker SOQL false positives | Medium | ~5 min | No |
+| 18 | Git index lock file | Low | ~30 sec | Yes (#5) |
+| 19 | Plan file permission denied | Low | ~30 sec | No |
+| 20 | GitHub username != ClickUp username | Low | ~2 min | No |
+
+**Total estimated time lost**: ~12 minutes
+
+**Key takeaways**:
+- **Repeated mistakes (#2, #5)**: ClickUp status names and git lock files - need to internalize these patterns
+- **Platform username mapping**: Maintain a team member mapping (ClickUp ID / GitHub username / display name)
+- **Local tooling limits**: `apex_syntax_check` doesn't handle multi-line SOQL - trust `sf project deploy` for real validation
+- **Container awareness**: Git safe.directory and index.lock are container environment artifacts, not code issues
+
+---
+---
+
+# [US-1.1.4] Patient Search & Duplicate Detection - PR Review Fixes
+
+**Ticket**: https://app.clickup.com/t/86d1yxw61
+**Date**: 2026-02-19
+**Context**: Addressing 13 PR review findings from animeshdas738 on PR #6
+
+---
+
+## Mistake 21: Original Implementation Had 13 Reviewable Issues
+
+**What happened**: The US-1.1.4 Patient Search & Duplicate Detection implementation had 13 findings caught in PR review (3 HIGH, 6 MEDIUM, 4 LOW) across 8 files (4 Apex + 4 LWC). These represent coding patterns that should have been caught before PR submission.
+
+### HIGH Severity Findings (3):
+
+**#1 - Merge wizard field selections never applied**: The merge wizard collected field preferences in Step 2 but never sent them to the Apex controller. The `fieldsChanged` parameter was always `'{}'`. The Apex `mergePatients` method received the JSON but never applied it to the master record before `Database.merge()`.
+
+- **Root cause**: End-to-end feature not wired up. The HTML had no radio buttons for selection, the JS didn't track selections, and the Apex didn't apply values.
+- **Fix**: Added radio buttons in HTML Step 2 for differing fields, tracked `masterRawValue`/`duplicateRawValue` in JS, sent only duplicate-selected fields in `fieldsChanged`, and added Apex logic to apply field values to master before merge.
+- **Prevention**: Test features end-to-end, not just individual layers. A merge wizard that doesn't actually merge user-selected values is functionally broken.
+
+**#2 - Dead `likeTerms` code**: Both `checkDuplicates` and `searchByName` methods had unused `likeTerms` variables and LIKE query building logic that was never used because the methods switched to using `DuplicateDetectionService` instead.
+
+- **Root cause**: Refactoring left behind dead code from an earlier implementation approach.
+- **Fix**: Removed all dead `likeTerms` code from both methods.
+- **Prevention**: After refactoring, search for any variables/logic from the old approach that are no longer referenced. A quick "find usages" check catches this.
+
+**#3 - NPE on null `Variants__c`**: `DuplicateDetectionService` called `.split(',')` on `Variants__c` fields from Custom Metadata Type records without null checks. If a CMT record has a blank `Variants__c`, this throws a NullPointerException.
+
+- **Root cause**: Assumed all CMT records would have populated `Variants__c` fields.
+- **Fix**: Added `String.isNotBlank()` checks before all 3 `.split(',')` calls.
+- **Prevention**: Always null-check before calling methods on field values from SOQL results. This is an Apex fundamental that should be automatic.
+
+### MEDIUM Severity Findings (6):
+
+**#4 - `cacheable=true` on search/duplicate methods**: `searchPatients` and `checkDuplicates` had `@AuraEnabled(cacheable=true)`, which caches results on the client. For search operations, this means stale results when data changes between searches.
+
+- **Fix**: Removed `cacheable=true` from both methods.
+- **Prevention**: Only use `cacheable=true` for read-only reference data that rarely changes. Search and duplicate-check operations should always hit the server for fresh results.
+
+**#5 - 10 SOQL queries in `getMergePreview`**: The method ran 8 separate `SELECT COUNT()` queries (4 objects x 2 records) plus 2 main queries = 10 SOQL. This is wasteful and approaches governor limits in bulk scenarios.
+
+- **Fix**: Consolidated 8 COUNT queries into 4 GROUP BY aggregate queries (`SELECT PatientId, COUNT(Id) cnt FROM X WHERE PatientId IN :bothIds GROUP BY PatientId`). Reduced from 10 to 6 SOQL.
+- **Prevention**: When counting records for multiple IDs on the same object, always use GROUP BY aggregate queries instead of individual COUNTs.
+
+**#6 - Audit log not protected by Savepoint**: If `Database.merge()` succeeded but the subsequent `MergeAuditLog__c` insert failed, data would be inconsistent - merged records with no audit trail.
+
+- **Fix**: Wrapped merge + audit log insert in `Database.setSavepoint()` / `Database.rollback()` for atomicity.
+- **Prevention**: Any multi-DML operation that must be all-or-nothing should use Savepoints. Especially when one DML is a destructive merge.
+
+**#7 - Phone search without normalization**: Phone search used exact match only. Users typing `+65 9123 4567` wouldn't match a record stored as `91234567`.
+
+- **Fix**: Added `replaceAll('[^0-9+]', '')` normalization, `+65` prefix stripping, and `Set<String> phoneVariants` with `IN :phoneVariants` query.
+- **Prevention**: Phone numbers should always be normalized before comparison. Strip non-digits and handle country code prefixes.
+
+**#8 - Master ID hardcoded to `searchResults[0]`**: The merge button always passed `searchResults[0].patient.Id` as the master, regardless of which patient the user originally searched for.
+
+- **Fix**: Added `duplicateCheckPatientId` tracked property, set when user clicks "Check Duplicates", used in the merge button's `data-master-id`.
+- **Prevention**: Track user context (which record they're working with) in component state, don't assume array position.
+
+**#9 - Hardcoded `en-SG` locale**: `formatDate()` used hardcoded `'en-SG'` locale string instead of browser default.
+
+- **Fix**: Replaced with `undefined` to use browser's default locale.
+- **Prevention**: Same as Mistake 13 finding #6 from US-1.1.3. This is a repeat. Never hardcode locales - use `undefined` for browser default.
+
+### LOW Severity Findings (4):
+
+**#10 - Full CMT table scan**: Custom Metadata Type queries had no filter, scanning the entire table.
+
+- **Resolution**: Acceptable for small CMT tables. Added `WITH SECURITY_ENFORCED` for FLS compliance.
+
+**#11 - API version inconsistency**: 6 meta XML files used `apiVersion 60.0` while the rest of the project uses `62.0`.
+
+- **Fix**: Updated all 6 meta XMLs to `62.0`.
+- **Prevention**: Set the default API version in `sfdx-project.json` and verify new file meta XMLs match before committing.
+
+**#12 - No `WITH SECURITY_ENFORCED` on CMT queries**: Both CMT queries in `DuplicateDetectionService` lacked FLS enforcement.
+
+- **Fix**: Added `WITH SECURITY_ENFORCED` to both queries.
+- **Prevention**: Every SOQL query should include `WITH SECURITY_ENFORCED` unless there's a documented reason to skip it.
+
+**#13 - Test uses same fake ID for both parameters**: `testGetMergePreview_InvalidId` passed the same fake ID for both master and duplicate, which could trigger the "same record" error instead of "not found".
+
+- **Fix**: Used two distinct fake IDs (`000000000001` and `000000000002`).
+- **Prevention**: Negative tests should isolate the exact error condition being tested. Using distinct IDs ensures we test "not found" not "same record".
+
+---
+
+## Summary (US-1.1.4 PR Review Session)
+
+| # | Mistake | Severity | Time Lost |
+|---|---------|----------|-----------|
+| 21 | 13 PR review findings in original impl | High | ~45 min (review + fix cycle) |
+
+**Total estimated time lost**: ~45 minutes
+
+**Key takeaways**:
+- **End-to-end testing is critical**: The merge wizard (Finding #1) was functionally broken - it collected preferences but never applied them. Testing each layer in isolation missed this.
+- **Dead code removal after refactoring**: Finding #2 is pure sloppiness. Always clean up after switching approaches.
+- **Null-check everything from SOQL**: Finding #3 is an Apex fundamental. Field values from queries can always be null.
+- **Repeat patterns from US-1.1.3**: Hardcoded locale (#9) was the exact same mistake as US-1.1.3 Finding #6. This needs to be in a permanent pre-PR checklist.
+- **GROUP BY aggregates over individual COUNTs**: Finding #5 should be a default pattern for counting across multiple record IDs.
+- **Savepoints for multi-DML atomicity**: Finding #6 - any destructive operation (merge, delete) paired with audit logging needs a Savepoint.
+- **Phone normalization is mandatory**: Finding #7 - phone fields need strip + variant matching, not exact match.
+- **API version alignment**: Finding #11 - check meta XMLs match project standard before committing.
+- **WITH SECURITY_ENFORCED on every query**: Finding #12 - no exceptions, make it automatic.
+
+### Cumulative Pre-PR Checklist (Updated)
+
+Based on all mistakes across US-1.1.2, US-1.1.3, and US-1.1.4:
+
+1. **Field metadata**: Query required fields on unfamiliar objects before writing factories
+2. **Person Account WhoId**: Use `PersonContactId` for Task/Event queries
+3. **End-to-end feature flow**: Verify data flows from UI → JS → Apex → DB and back
+4. **Dead code cleanup**: Search for unused variables/methods after refactoring
+5. **Null checks**: `String.isNotBlank()` before `.split()`, `.toLowerCase()`, etc.
+6. **No `cacheable=true` on search/write operations**: Only for static reference data
+7. **GROUP BY aggregates**: Use instead of individual COUNTs for multi-record queries
+8. **Savepoints**: Wrap multi-DML operations, especially with destructive ops
+9. **Phone normalization**: Strip non-digits, handle country code prefixes
+10. **No hardcoded locales**: Use `undefined` for browser default
+11. **SLDS design tokens**: No raw hex colors in CSS
+12. **`WITH SECURITY_ENFORCED`**: On every SOQL query
+13. **API version alignment**: Meta XMLs match `sfdx-project.json`
+14. **Distinct test data**: Negative tests should isolate exact error conditions
+15. **No magic strings**: Use constants for status values, categories, etc.
+16. **Self-review full diff**: Read through entire diff before creating PR
