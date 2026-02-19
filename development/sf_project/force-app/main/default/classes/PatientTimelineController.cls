@@ -10,7 +10,10 @@ public with sharing class PatientTimelineController {
     private static final String CATEGORY_ADMINISTRATIVE = 'administrative';
     private static final String CATEGORY_ENGAGEMENT = 'engagement';
     private static final String FILTER_ALL = 'all';
+    private static final String STATUS_SCHEDULED = 'Scheduled';
+    private static final String STATUS_COMPLETED = 'Completed';
     private static final Integer QUERY_LIMIT = 50;
+    private static final Integer TOTAL_EVENT_CAP = 100;
 
     /**
      * @description Unified wrapper for timeline events from multiple source objects.
@@ -46,18 +49,7 @@ public with sharing class PatientTimelineController {
      */
     @AuraEnabled(cacheable=true)
     public static List<TimelineEvent> getTimelineEvents(Id accountId, String filterType) {
-        // Validate account exists
-        List<Account> accounts = [
-            SELECT Id FROM Account
-            WHERE Id = :accountId
-            WITH SECURITY_ENFORCED
-            LIMIT 1
-        ];
-        if (accounts.isEmpty()) {
-            throw new AuraHandledException('Patient record not found.');
-        }
-
-        String filter = String.isBlank(filterType) ? FILTER_ALL : filterType.toLowerCase();
+        String filter = String.isBlank(filterType) ? FILTER_ALL : filterType;
         List<TimelineEvent> events = new List<TimelineEvent>();
 
         if (filter == FILTER_ALL || filter == CATEGORY_CLINICAL) {
@@ -79,13 +71,21 @@ public with sharing class PatientTimelineController {
         }
 
         events.sort();
+        if (events.size() > TOTAL_EVENT_CAP) {
+            List<TimelineEvent> capped = new List<TimelineEvent>();
+            for (Integer i = 0; i < TOTAL_EVENT_CAP; i++) {
+                capped.add(events[i]);
+            }
+            return capped;
+        }
         return events;
     }
 
     private static List<TimelineEvent> getClinicalEncounters(Id accountId) {
         List<TimelineEvent> events = new List<TimelineEvent>();
         for (ClinicalEncounter ce : [
-            SELECT Id, Name, Status, Category, StartDate, EndDate
+            SELECT Id, Name, Status, Category, StartDate, EndDate,
+                   Facility.Name, Practitioner.Name
             FROM ClinicalEncounter
             WHERE PatientId = :accountId
             WITH SECURITY_ENFORCED
@@ -100,6 +100,8 @@ public with sharing class PatientTimelineController {
             te.description = ce.Category != null ? 'Category: ' + ce.Category : '';
             te.eventDate = ce.StartDate;
             te.status = ce.Status;
+            te.provider = ce.Practitioner != null ? ce.Practitioner.Name : null;
+            te.facility = ce.Facility != null ? ce.Facility.Name : null;
             te.iconName = 'standard:visit_templates';
             events.add(te);
         }
@@ -207,7 +209,7 @@ public with sharing class PatientTimelineController {
         for (CarePlan cp : [
             SELECT Id, Name, Status, Description, StartDate
             FROM CarePlan
-            WHERE ParticipantId = :accountId
+            WHERE AccountId = :accountId
             WITH SECURITY_ENFORCED
             ORDER BY StartDate DESC
             LIMIT :QUERY_LIMIT
@@ -228,10 +230,12 @@ public with sharing class PatientTimelineController {
 
     private static List<TimelineEvent> getTasks(Id accountId) {
         List<TimelineEvent> events = new List<TimelineEvent>();
+        List<Id> contactIds = getPersonContactIds(accountId);
         for (Task t : [
             SELECT Id, Subject, Status, ActivityDate, Description
             FROM Task
             WHERE WhatId = :accountId
+               OR WhoId IN :contactIds
             WITH SECURITY_ENFORCED
             ORDER BY ActivityDate DESC NULLS LAST
             LIMIT :QUERY_LIMIT
@@ -254,10 +258,12 @@ public with sharing class PatientTimelineController {
 
     private static List<TimelineEvent> getEvents(Id accountId) {
         List<TimelineEvent> events = new List<TimelineEvent>();
+        List<Id> contactIds = getPersonContactIds(accountId);
         for (Event e : [
-            SELECT Id, Subject, StartDateTime, Description
+            SELECT Id, Subject, StartDateTime, EndDateTime, Description
             FROM Event
             WHERE WhatId = :accountId
+               OR WhoId IN :contactIds
             WITH SECURITY_ENFORCED
             ORDER BY StartDateTime DESC
             LIMIT :QUERY_LIMIT
@@ -269,11 +275,31 @@ public with sharing class PatientTimelineController {
             te.title = e.Subject != null ? e.Subject : 'Event';
             te.description = e.Description;
             te.eventDate = e.StartDateTime;
-            te.status = 'Scheduled';
+            te.status = e.EndDateTime != null && e.EndDateTime < DateTime.now()
+                ? STATUS_COMPLETED : STATUS_SCHEDULED;
             te.iconName = 'standard:event';
             events.add(te);
         }
         return events;
+    }
+
+    /**
+     * @description Retrieves PersonContactId(s) for a Person Account.
+     *              Used to query Tasks/Events linked via WhoId.
+     */
+    private static List<Id> getPersonContactIds(Id accountId) {
+        List<Id> contactIds = new List<Id>();
+        for (Account a : [
+            SELECT PersonContactId FROM Account
+            WHERE Id = :accountId AND IsPersonAccount = true
+            WITH SECURITY_ENFORCED
+            LIMIT 1
+        ]) {
+            if (a.PersonContactId != null) {
+                contactIds.add(a.PersonContactId);
+            }
+        }
+        return contactIds;
     }
 
     private static List<TimelineEvent> getCases(Id accountId) {

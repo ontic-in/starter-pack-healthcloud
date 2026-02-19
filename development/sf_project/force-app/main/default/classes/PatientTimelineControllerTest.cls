@@ -157,7 +157,39 @@ private class PatientTimelineControllerTest {
     }
 
     /**
-     * @description Invalid Account ID throws AuraHandledException.
+     * @description Null/blank filterType defaults to 'all' and returns events.
+     */
+    @isTest
+    static void testGetTimelineEventsNullFilter() {
+        Account patient = [SELECT Id FROM Account WHERE NRIC__c = 'S8800001T' LIMIT 1];
+
+        Test.startTest();
+        List<PatientTimelineController.TimelineEvent> events =
+            PatientTimelineController.getTimelineEvents(patient.Id, null);
+        Test.stopTest();
+
+        Assert.isNotNull(events, 'Events list should not be null');
+        Assert.isTrue(events.size() >= 4, 'Null filter should default to all and return all events');
+    }
+
+    /**
+     * @description Blank string filterType defaults to 'all' and returns events.
+     */
+    @isTest
+    static void testGetTimelineEventsBlankFilter() {
+        Account patient = [SELECT Id FROM Account WHERE NRIC__c = 'S8800001T' LIMIT 1];
+
+        Test.startTest();
+        List<PatientTimelineController.TimelineEvent> events =
+            PatientTimelineController.getTimelineEvents(patient.Id, '');
+        Test.stopTest();
+
+        Assert.isNotNull(events, 'Events list should not be null');
+        Assert.isTrue(events.size() >= 4, 'Blank filter should default to all and return all events');
+    }
+
+    /**
+     * @description Invalid Account ID returns empty list (no account validation query).
      */
     @isTest
     static void testGetTimelineEventsInvalidId() {
@@ -165,12 +197,11 @@ private class PatientTimelineControllerTest {
             .getKeyPrefix() + '000000000000';
 
         Test.startTest();
-        try {
+        List<PatientTimelineController.TimelineEvent> events =
             PatientTimelineController.getTimelineEvents(fakeAccountId, 'all');
-            Assert.fail('Should have thrown AuraHandledException');
-        } catch (AuraHandledException e) {
-            Assert.isTrue(e.getMessage().length() > 0, 'Exception should have a message');
-        }
         Test.stopTest();
+
+        Assert.isNotNull(events, 'Events list should not be null');
+        Assert.areEqual(0, events.size(), 'Invalid ID should return empty list');
     }
 }

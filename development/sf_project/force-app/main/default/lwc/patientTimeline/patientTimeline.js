@@ -53,6 +53,10 @@ export default class PatientTimeline extends NavigationMixin(LightningElement) {
         return this.events ? this.events.length : 0;
     }
 
+    get showEmptyState() {
+        return !this.isLoading && !this.error && !this.hasEvents;
+    }
+
     get filterButtons() {
         return this.filterOptions.map((opt) => ({
             ...opt,
@@ -95,7 +99,7 @@ export default class PatientTimeline extends NavigationMixin(LightningElement) {
 
     formatDate(dateValue) {
         if (!dateValue) return '';
-        return new Date(dateValue).toLocaleDateString('en-SG', {
+        return new Date(dateValue).toLocaleDateString(undefined, {
             day: '2-digit',
             month: 'short',
             year: 'numeric'
@@ -104,7 +108,7 @@ export default class PatientTimeline extends NavigationMixin(LightningElement) {
 
     formatTime(dateValue) {
         if (!dateValue) return '';
-        return new Date(dateValue).toLocaleTimeString('en-SG', {
+        return new Date(dateValue).toLocaleTimeString(undefined, {
             hour: '2-digit',
             minute: '2-digit',
             hour12: false

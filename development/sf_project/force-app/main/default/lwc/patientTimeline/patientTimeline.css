@@ -1,25 +1,25 @@
 /* Patient Timeline LWC - BEM naming, CSS custom properties */
 
 :host {
-    --timeline-line-color: #d8dde6;
-    --timeline-item-bg: #ffffff;
-    --timeline-item-hover-bg: #f3f3f3;
+    --timeline-line-color: var(--slds-g-color-border-base-1, #d8dde6);
+    --timeline-item-bg: var(--slds-g-color-surface-container-1, #ffffff);
+    --timeline-item-hover-bg: var(--slds-g-color-surface-container-2, #f3f3f3);
     --timeline-border-radius: 0.5rem;
     --timeline-spacing: 1rem;
     --timeline-icon-size: 2.25rem;
 
-    --color-clinical: #1b96ff;
-    --color-administrative: #ff9a3c;
-    --color-engagement: #4bca81;
+    --color-clinical: var(--slds-g-color-brand-base-50, #1b96ff);
+    --color-administrative: var(--slds-g-color-warning-base-50, #ff9a3c);
+    --color-engagement: var(--slds-g-color-success-base-50, #4bca81);
 
-    --badge-active-bg: #e1f5fe;
-    --badge-active-color: #0176d3;
-    --badge-completed-bg: #e8f5e9;
-    --badge-completed-color: #2e844a;
-    --badge-planned-bg: #fff3e0;
-    --badge-planned-color: #e65100;
-    --badge-cancelled-bg: #fce4ec;
-    --badge-cancelled-color: #c62828;
+    --badge-active-bg: var(--slds-g-color-brand-base-10, #e1f5fe);
+    --badge-active-color: var(--slds-g-color-brand-base-60, #0176d3);
+    --badge-completed-bg: var(--slds-g-color-success-base-10, #e8f5e9);
+    --badge-completed-color: var(--slds-g-color-success-base-60, #2e844a);
+    --badge-planned-bg: var(--slds-g-color-warning-base-10, #fff3e0);
+    --badge-planned-color: var(--slds-g-color-warning-base-70, #e65100);
+    --badge-cancelled-bg: var(--slds-g-color-error-base-10, #fce4ec);
+    --badge-cancelled-color: var(--slds-g-color-error-base-60, #c62828);
 }
 
 /* Filters */
@@ -42,9 +42,9 @@
 /* Error */
 .timeline__error {
     padding: var(--timeline-spacing);
-    background-color: #fce4ec;
+    background-color: var(--badge-cancelled-bg);
     border-radius: var(--timeline-border-radius);
-    color: #c62828;
+    color: var(--badge-cancelled-color);
     margin: var(--timeline-spacing);
 }
 
@@ -55,7 +55,7 @@
     align-items: center;
     gap: 0.5rem;
     padding: 3rem 0;
-    color: #706e6b;
+    color: var(--slds-g-color-neutral-base-50, #706e6b);
 }
 
 /* Timeline container */
@@ -90,7 +90,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #ffffff;
+    background-color: var(--timeline-item-bg);
     border-radius: 50%;
     z-index: 1;
 }
@@ -99,7 +99,7 @@
 .timeline__content {
     flex: 1;
     background-color: var(--timeline-item-bg);
-    border: 1px solid #d8dde6;
+    border: 1px solid var(--timeline-line-color);
     border-radius: var(--timeline-border-radius);
     padding: 0.75rem 1rem;
     cursor: pointer;
@@ -127,7 +127,7 @@
 .timeline__title {
     font-size: 0.875rem;
     font-weight: 600;
-    color: #181818;
+    color: var(--slds-g-color-neutral-base-10, #181818);
     margin: 0;
 }
 
@@ -138,8 +138,8 @@
     border-radius: 1rem;
     font-size: 0.75rem;
     font-weight: 500;
-    background-color: #ecebea;
-    color: #706e6b;
+    background-color: var(--slds-g-color-neutral-base-95, #ecebea);
+    color: var(--slds-g-color-neutral-base-50, #706e6b);
 }
 
 .timeline__badge--active {
@@ -175,11 +175,11 @@
     align-items: center;
     gap: 0.25rem;
     font-size: 0.75rem;
-    color: #706e6b;
+    color: var(--slds-g-color-neutral-base-50, #706e6b);
 }
 
 .timeline__meta-icon {
-    --slds-c-icon-color-foreground-default: #706e6b;
+    --slds-c-icon-color-foreground-default: var(--slds-g-color-neutral-base-50, #706e6b);
 }
 
 /* Category badge */
@@ -209,7 +209,7 @@
 /* Description */
 .timeline__description {
     font-size: 0.8125rem;
-    color: #444444;
+    color: var(--slds-g-color-neutral-base-30, #444444);
     margin: 0.25rem 0 0;
     line-height: 1.4;
 }
@@ -218,7 +218,7 @@
 .timeline__detail {
     display: block;
     font-size: 0.75rem;
-    color: #706e6b;
+    color: var(--slds-g-color-neutral-base-50, #706e6b);
     margin-top: 0.125rem;
 }
 
@@ -229,7 +229,7 @@
 
 .timeline__count {
     font-size: 0.75rem;
-    color: #706e6b;
+    color: var(--slds-g-color-neutral-base-50, #706e6b);
 }
 
 /* Responsive */

@@ -29,10 +29,8 @@
             </div>
         </template>
 
-        <!-- Empty State -->
-        <template lwc:if={isLoading}>
-        </template>
-        <template lwc:elseif={hasEvents}>
+        <!-- Timeline Events -->
+        <template lwc:if={hasEvents}>
             <!-- Timeline Events -->
             <div class="timeline__container">
                 <div class="timeline__line"></div>
@@ -90,7 +88,7 @@
                 </template>
             </div>
         </template>
-        <template lwc:else>
+        <template lwc:if={showEmptyState}>
             <div class="timeline__empty">
                 <lightning-icon icon-name="utility:info" size="small"></lightning-icon>
                 <p>No timeline events found for this patient.</p>
