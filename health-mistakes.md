@@ -521,3 +521,90 @@ Based on all mistakes across US-1.1.2, US-1.1.3, and US-1.1.4:
 14. **Distinct test data**: Negative tests should isolate exact error conditions
 15. **No magic strings**: Use constants for status values, categories, etc.
 16. **Self-review full diff**: Read through entire diff before creating PR
+
+---
+---
+
+# Workflow & Tooling Mistakes - Commit/Merge Session
+
+**Date**: 2026-02-19
+**Context**: Committing US-1.1.4 PR review fixes, merging US-1.1.3 PR, resolving conflicts
+
+---
+
+## Mistake 22: Running Undeployed Test Classes Against Org
+
+**What happened**: After modifying `PatientMergeControllerTest.cls` locally, tried to run it individually against the org with `sf apex run test --class-names PatientMergeControllerTest`. The org still had the old version of the class.
+
+**Error**: `INVALID_INPUT: This class name's value is invalid: PatientMergeControllerTest. Provide the name of an Apex class that has test methods.`
+
+**Impact**: Low - had to rely on the broader `RunLocalTests` results (which ran the old deployed version) plus local syntax validation.
+
+**Fix**: Confirmed our tests pass in the full `RunLocalTests` run. The modified test class will be validated after deployment.
+
+**Prevention**: Remember that `sf apex run test --class-names` runs tests **in the org**, not locally. If you've modified test classes but haven't deployed them, the org still has the old version. Either deploy first, or rely on `RunLocalTests` for already-deployed test classes.
+
+---
+
+## Mistake 23: ESLint Run from Wrong Directory
+
+**What happened**: Ran `npx eslint development/sf_project/force-app/...` from the repo root. ESLint couldn't find the files because its config (`.eslintrc.json`) is in `development/sf_project/`.
+
+**Error**: `No files matching the pattern "development/sf_project/force-app/main/default/lwc/..." were found.`
+
+**Impact**: Low - had to re-run from `development/sf_project/` with relative paths.
+
+**Fix**: Ran `npx eslint force-app/main/default/lwc/...` from within `development/sf_project/`.
+
+**Prevention**: Always run ESLint from the directory containing `.eslintrc.json`. For this project, that's `development/sf_project/`. Same principle as `sf` CLI commands needing the SFDX project root.
+
+---
+
+## Mistake 24: git commit from Wrong CWD (Repeat)
+
+**What happened**: After running `sf` CLI commands from `development/sf_project/`, tried `git add health-mistakes.md` from the same directory. The file path didn't resolve because `health-mistakes.md` is at the repo root.
+
+**Error**: `fatal: pathspec 'health-mistakes.md' did not match any files`
+
+**Impact**: Low - had to prefix with `cd /home/dev/workspace/starter-pack-healthcloud &&`.
+
+**Fix**: Used full path: `cd /home/dev/workspace/starter-pack-healthcloud && git add health-mistakes.md`.
+
+**Prevention**: Same as Mistake #10. Always use absolute paths or verify CWD before git operations. The `sf` CLI and git have different root directory requirements.
+
+**Repeat of**: Mistake #10.
+
+---
+
+## Mistake 25: Merge Conflict from Divergent Mistake Numbering
+
+**What happened**: When merging `clickup-86d1yxw5w` (US-1.1.3) into main, `health-mistakes.md` had a conflict. Both branches had independently numbered mistakes starting at #7: US-1.1.3 branch had mistakes 7-13 (timeline implementation + PR review), while main (from US-1.1.4 merge) had mistakes 7-13 (search implementation). Same number range, completely different content.
+
+**Error**: `CONFLICT (content): Merge conflict in health-mistakes.md`
+
+**Impact**: Medium - had to manually resolve the conflict, renumber US-1.1.4 implementation mistakes from 7-13 to 14-20, and ensure all content from both branches was preserved. ~5 min.
+
+**Fix**: Kept both sets of mistakes, renumbered US-1.1.4 implementation mistakes to 14-20, added US-1.1.4 PR review as #21. Final file has 21 mistakes in correct chronological order.
+
+**Prevention**: When multiple branches modify the same tracking file (like a mistakes log), coordinate numbering. Options:
+1. **Merge main into feature branches** before adding entries, so numbering stays sequential
+2. **Use ticket-scoped sections** without global numbering (section headers instead of sequential numbers)
+3. **Always merge PRs in the order work was started** to maintain numbering consistency
+
+---
+
+## Summary (Workflow & Tooling Session)
+
+| # | Mistake | Severity | Time Lost | Repeat? |
+|---|---------|----------|-----------|---------|
+| 22 | Running undeployed test class against org | Low | ~2 min | No |
+| 23 | ESLint from wrong directory | Low | ~1 min | No |
+| 24 | git commit from wrong CWD | Low | ~30 sec | Yes (#10) |
+| 25 | Merge conflict from divergent numbering | Medium | ~5 min | No |
+
+**Total estimated time lost**: ~9 minutes
+
+**Key takeaways**:
+- **sf apex run test runs in the org**: Local file changes don't affect org-side test execution until deployed
+- **Tool-specific working directories**: `sf` CLI needs `development/sf_project/`, ESLint needs `development/sf_project/`, git needs repo root. Three different roots for three different tools.
+- **Shared tracking files cause merge conflicts**: When multiple branches add content to the same file with sequential numbering, conflicts are inevitable. Consider section-based organization instead.
