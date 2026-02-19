@@ -1,0 +1,104 @@
+<template>
+    <lightning-card title="Patient Timeline" icon-name="standard:event">
+
+        <!-- Filter Bar -->
+        <div slot="actions" class="timeline__filters">
+            <template for:each={filterButtons} for:item="btn">
+                <lightning-button
+                    key={btn.value}
+                    label={btn.label}
+                    variant={btn.variant}
+                    data-filter={btn.value}
+                    onclick={handleFilterChange}
+                    class={btn.cssClass}
+                ></lightning-button>
+            </template>
+        </div>
+
+        <!-- Loading -->
+        <template lwc:if={isLoading}>
+            <div class="timeline__loading">
+                <lightning-spinner alternative-text="Loading timeline" size="medium"></lightning-spinner>
+            </div>
+        </template>
+
+        <!-- Error -->
+        <template lwc:if={error}>
+            <div class="timeline__error">
+                <p>{error}</p>
+            </div>
+        </template>
+
+        <!-- Timeline Events -->
+        <template lwc:if={hasEvents}>
+            <!-- Timeline Events -->
+            <div class="timeline__container">
+                <div class="timeline__line"></div>
+
+                <template for:each={events} for:item="evt">
+                    <div key={evt.recordId} class="timeline__item">
+
+                        <!-- Icon -->
+                        <div class="timeline__icon-container">
+                            <lightning-icon
+                                icon-name={evt.iconName}
+                                size="small"
+                                class="timeline__icon"
+                            ></lightning-icon>
+                        </div>
+
+                        <!-- Content -->
+                        <div
+                            class="timeline__content"
+                            data-record-id={evt.recordId}
+                            onclick={navigateToRecord}
+                            onkeydown={handleKeydown}
+                            tabindex="0"
+                            role="link"
+                        >
+                            <!-- Header -->
+                            <div class="timeline__header">
+                                <h3 class="timeline__title">{evt.title}</h3>
+                                <span class={evt.statusClass}>{evt.status}</span>
+                            </div>
+
+                            <!-- Meta -->
+                            <div class="timeline__meta">
+                                <span class="timeline__date">
+                                    <lightning-icon icon-name="utility:clock" size="xx-small" class="timeline__meta-icon"></lightning-icon>
+                                    {evt.formattedDate} {evt.formattedTime}
+                                </span>
+                                <span class={evt.categoryClass}>{evt.objectType}</span>
+                            </div>
+
+                            <!-- Description -->
+                            <template lwc:if={evt.description}>
+                                <p class="timeline__description">{evt.description}</p>
+                            </template>
+
+                            <!-- Provider/Facility -->
+                            <template lwc:if={evt.provider}>
+                                <span class="timeline__detail">Provider: {evt.provider}</span>
+                            </template>
+                            <template lwc:if={evt.facility}>
+                                <span class="timeline__detail">Facility: {evt.facility}</span>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </template>
+        <template lwc:if={showEmptyState}>
+            <div class="timeline__empty">
+                <lightning-icon icon-name="utility:info" size="small"></lightning-icon>
+                <p>No timeline events found for this patient.</p>
+            </div>
+        </template>
+
+        <!-- Footer -->
+        <div slot="footer" class="timeline__footer">
+            <span class="timeline__count">{eventCount} events</span>
+        </div>
+
+    </lightning-card>
+</template>

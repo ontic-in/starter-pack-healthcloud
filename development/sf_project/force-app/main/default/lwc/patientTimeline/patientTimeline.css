@@ -1,0 +1,250 @@
+/* Patient Timeline LWC - BEM naming, CSS custom properties */
+
+:host {
+    --timeline-line-color: var(--slds-g-color-border-base-1, #d8dde6);
+    --timeline-item-bg: var(--slds-g-color-surface-container-1, #ffffff);
+    --timeline-item-hover-bg: var(--slds-g-color-surface-container-2, #f3f3f3);
+    --timeline-border-radius: 0.5rem;
+    --timeline-spacing: 1rem;
+    --timeline-icon-size: 2.25rem;
+
+    --color-clinical: var(--slds-g-color-brand-base-50, #1b96ff);
+    --color-administrative: var(--slds-g-color-warning-base-50, #ff9a3c);
+    --color-engagement: var(--slds-g-color-success-base-50, #4bca81);
+
+    --badge-active-bg: var(--slds-g-color-brand-base-10, #e1f5fe);
+    --badge-active-color: var(--slds-g-color-brand-base-60, #0176d3);
+    --badge-completed-bg: var(--slds-g-color-success-base-10, #e8f5e9);
+    --badge-completed-color: var(--slds-g-color-success-base-60, #2e844a);
+    --badge-planned-bg: var(--slds-g-color-warning-base-10, #fff3e0);
+    --badge-planned-color: var(--slds-g-color-warning-base-70, #e65100);
+    --badge-cancelled-bg: var(--slds-g-color-error-base-10, #fce4ec);
+    --badge-cancelled-color: var(--slds-g-color-error-base-60, #c62828);
+}
+
+/* Filters */
+.timeline__filters {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.timeline__filter-btn {
+    margin-left: 0.25rem;
+}
+
+/* Loading */
+.timeline__loading {
+    display: flex;
+    justify-content: center;
+    padding: 3rem 0;
+}
+
+/* Error */
+.timeline__error {
+    padding: var(--timeline-spacing);
+    background-color: var(--badge-cancelled-bg);
+    border-radius: var(--timeline-border-radius);
+    color: var(--badge-cancelled-color);
+    margin: var(--timeline-spacing);
+}
+
+/* Empty */
+.timeline__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 3rem 0;
+    color: var(--slds-g-color-neutral-base-50, #706e6b);
+}
+
+/* Timeline container */
+.timeline__container {
+    position: relative;
+    padding: var(--timeline-spacing);
+}
+
+/* Vertical line */
+.timeline__line {
+    position: absolute;
+    left: calc(var(--timeline-icon-size) / 2 + var(--timeline-spacing));
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: var(--timeline-line-color);
+}
+
+/* Timeline item */
+.timeline__item {
+    display: flex;
+    gap: var(--timeline-spacing);
+    margin-bottom: var(--timeline-spacing);
+    position: relative;
+}
+
+/* Icon container */
+.timeline__icon-container {
+    flex-shrink: 0;
+    width: var(--timeline-icon-size);
+    height: var(--timeline-icon-size);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--timeline-item-bg);
+    border-radius: 50%;
+    z-index: 1;
+}
+
+/* Content card */
+.timeline__content {
+    flex: 1;
+    background-color: var(--timeline-item-bg);
+    border: 1px solid var(--timeline-line-color);
+    border-radius: var(--timeline-border-radius);
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.timeline__content:hover {
+    background-color: var(--timeline-item-hover-bg);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.timeline__content:focus {
+    outline: 2px solid var(--color-clinical);
+    outline-offset: 2px;
+}
+
+/* Header */
+.timeline__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.25rem;
+}
+
+.timeline__title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--slds-g-color-neutral-base-10, #181818);
+    margin: 0;
+}
+
+/* Badge */
+.timeline__badge {
+    display: inline-block;
+    padding: 0.125rem 0.5rem;
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    background-color: var(--slds-g-color-neutral-base-95, #ecebea);
+    color: var(--slds-g-color-neutral-base-50, #706e6b);
+}
+
+.timeline__badge--active {
+    background-color: var(--badge-active-bg);
+    color: var(--badge-active-color);
+}
+
+.timeline__badge--completed {
+    background-color: var(--badge-completed-bg);
+    color: var(--badge-completed-color);
+}
+
+.timeline__badge--planned {
+    background-color: var(--badge-planned-bg);
+    color: var(--badge-planned-color);
+}
+
+.timeline__badge--cancelled {
+    background-color: var(--badge-cancelled-bg);
+    color: var(--badge-cancelled-color);
+}
+
+/* Meta row */
+.timeline__meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.25rem;
+}
+
+.timeline__date {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    color: var(--slds-g-color-neutral-base-50, #706e6b);
+}
+
+.timeline__meta-icon {
+    --slds-c-icon-color-foreground-default: var(--slds-g-color-neutral-base-50, #706e6b);
+}
+
+/* Category badge */
+.timeline__category {
+    display: inline-block;
+    padding: 0.0625rem 0.375rem;
+    border-radius: 0.25rem;
+    font-size: 0.6875rem;
+    font-weight: 500;
+}
+
+.timeline__category--clinical {
+    background-color: #e1f5fe;
+    color: var(--color-clinical);
+}
+
+.timeline__category--administrative {
+    background-color: #fff3e0;
+    color: var(--color-administrative);
+}
+
+.timeline__category--engagement {
+    background-color: #e8f5e9;
+    color: var(--color-engagement);
+}
+
+/* Description */
+.timeline__description {
+    font-size: 0.8125rem;
+    color: var(--slds-g-color-neutral-base-30, #444444);
+    margin: 0.25rem 0 0;
+    line-height: 1.4;
+}
+
+/* Detail rows */
+.timeline__detail {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--slds-g-color-neutral-base-50, #706e6b);
+    margin-top: 0.125rem;
+}
+
+/* Footer */
+.timeline__footer {
+    text-align: right;
+}
+
+.timeline__count {
+    font-size: 0.75rem;
+    color: var(--slds-g-color-neutral-base-50, #706e6b);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .timeline__header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+
+    .timeline__meta {
+        flex-wrap: wrap;
+    }
+
+    .timeline__filters {
+        flex-wrap: wrap;
+    }
+}

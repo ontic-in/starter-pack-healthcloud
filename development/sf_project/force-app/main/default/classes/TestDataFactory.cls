@@ -169,4 +169,76 @@ public class TestDataFactory {
         insert plan;
         return plan;
     }
+
+    /**
+     * @description Creates and inserts a ClinicalEncounter linked to a patient.
+     * @param patientId The patient Account Id.
+     * @param status Encounter status (e.g. finished).
+     * @param category Encounter category (e.g. encounter).
+     * @param startDate When the encounter started.
+     * @param endDate When the encounter ended.
+     * @return The inserted ClinicalEncounter record.
+     */
+    public static ClinicalEncounter createClinicalEncounter(
+        Id patientId,
+        String status,
+        String category,
+        DateTime startDate,
+        DateTime endDate
+    ) {
+        ClinicalEncounter encounter = new ClinicalEncounter(
+            PatientId = patientId,
+            Status = status,
+            Category = category,
+            StartDate = startDate,
+            EndDate = endDate
+        );
+        insert encounter;
+        return encounter;
+    }
+
+    /**
+     * @description Creates and inserts a Task linked to a patient account.
+     * @param accountId The patient Account Id (set as WhatId).
+     * @param subject Task subject.
+     * @param status Task status (e.g. Completed).
+     * @param activityDate Task due date.
+     * @return The inserted Task record.
+     */
+    public static Task createTask(
+        Id accountId,
+        String subject,
+        String status,
+        Date activityDate
+    ) {
+        Task t = new Task(
+            WhatId = accountId,
+            Subject = subject,
+            Status = status,
+            ActivityDate = activityDate
+        );
+        insert t;
+        return t;
+    }
+
+    /**
+     * @description Creates and inserts a Case linked to a patient account.
+     * @param accountId The patient Account Id.
+     * @param subject Case subject.
+     * @param status Case status (e.g. Closed).
+     * @return The inserted Case record.
+     */
+    public static Case createCase(
+        Id accountId,
+        String subject,
+        String status
+    ) {
+        Case c = new Case(
+            AccountId = accountId,
+            Subject = subject,
+            Status = status
+        );
+        insert c;
+        return c;
+    }
 }
