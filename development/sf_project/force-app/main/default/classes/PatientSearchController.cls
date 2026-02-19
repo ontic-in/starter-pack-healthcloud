@@ -28,7 +28,7 @@ public with sharing class PatientSearchController {
      * @return List of SearchResult with matched patients and confidence scores.
      * @throws AuraHandledException for invalid input or search type.
      */
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static List<SearchResult> searchPatients(String searchTerm, String searchType) {
         if (String.isBlank(searchTerm)) {
             throw new AuraHandledException('Search term is required.');
@@ -55,7 +55,7 @@ public with sharing class PatientSearchController {
      * @param dob Patient date of birth.
      * @return List of SearchResult with potential duplicates and confidence scores.
      */
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static List<SearchResult> checkDuplicates(
         String nric,
         String firstName,
@@ -87,10 +87,6 @@ public with sharing class PatientSearchController {
 
         if (String.isNotBlank(lastName)) {
             Set<String> nameVariants = DuplicateDetectionService.expandSearchTerms(lastName);
-            List<String> likeTerms = new List<String>();
-            for (String variant : nameVariants) {
-                likeTerms.add(variant + '%');
-            }
 
             List<Account> nameMatches = [
                 SELECT Id, FirstName, LastName, NRIC__c, PersonBirthdate,
@@ -153,10 +149,6 @@ public with sharing class PatientSearchController {
 
     private static List<SearchResult> searchByName(String name) {
         Set<String> expandedNames = DuplicateDetectionService.expandSearchTerms(name);
-        List<String> likeTerms = new List<String>();
-        for (String variant : expandedNames) {
-            likeTerms.add(variant + '%');
-        }
 
         List<Account> matches = [
             SELECT Id, FirstName, LastName, NRIC__c, PersonBirthdate,
@@ -181,13 +173,18 @@ public with sharing class PatientSearchController {
     }
 
     private static List<SearchResult> searchByPhone(String phone) {
-        String normalizedPhone = phone.trim();
+        String normalizedPhone = phone.trim().replaceAll('[^0-9+]', '');
+        // Also try without country code prefix for +65 numbers
+        String shortPhone = normalizedPhone.startsWith('+65')
+            ? normalizedPhone.substring(3)
+            : normalizedPhone;
+        Set<String> phoneVariants = new Set<String>{ normalizedPhone, shortPhone };
 
         List<Account> matches = [
             SELECT Id, FirstName, LastName, NRIC__c, PersonBirthdate,
                    PersonMobilePhone, PersonEmail, Ethnicity__c
             FROM Account
-            WHERE (PersonMobilePhone = :normalizedPhone OR Phone = :normalizedPhone)
+            WHERE (PersonMobilePhone IN :phoneVariants OR Phone IN :phoneVariants)
             AND IsPersonAccount = true
             WITH SECURITY_ENFORCED
             LIMIT 10

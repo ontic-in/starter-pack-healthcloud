@@ -70,39 +70,47 @@ public with sharing class PatientMergeController {
         preview.masterRecord = masters[0];
         preview.duplicateRecord = duplicates[0];
 
-        preview.masterConditionCount = [
-            SELECT COUNT() FROM HealthCondition
-            WHERE PatientId = :masterAccountId WITH SECURITY_ENFORCED
-        ];
-        preview.masterMedicationCount = [
-            SELECT COUNT() FROM MedicationStatement
-            WHERE PatientId = :masterAccountId WITH SECURITY_ENFORCED
-        ];
-        preview.masterAllergyCount = [
-            SELECT COUNT() FROM AllergyIntolerance
-            WHERE PatientId = :masterAccountId WITH SECURITY_ENFORCED
-        ];
-        preview.masterInsuranceCount = [
-            SELECT COUNT() FROM MemberPlan
-            WHERE MemberId = :masterAccountId WITH SECURITY_ENFORCED
-        ];
+        Set<Id> bothIds = new Set<Id>{ masterAccountId, duplicateAccountId };
 
-        preview.duplicateConditionCount = [
-            SELECT COUNT() FROM HealthCondition
-            WHERE PatientId = :duplicateAccountId WITH SECURITY_ENFORCED
-        ];
-        preview.duplicateMedicationCount = [
-            SELECT COUNT() FROM MedicationStatement
-            WHERE PatientId = :duplicateAccountId WITH SECURITY_ENFORCED
-        ];
-        preview.duplicateAllergyCount = [
-            SELECT COUNT() FROM AllergyIntolerance
-            WHERE PatientId = :duplicateAccountId WITH SECURITY_ENFORCED
-        ];
-        preview.duplicateInsuranceCount = [
-            SELECT COUNT() FROM MemberPlan
-            WHERE MemberId = :duplicateAccountId WITH SECURITY_ENFORCED
-        ];
+        Map<Id, Integer> conditionCounts = new Map<Id, Integer>();
+        Map<Id, Integer> medicationCounts = new Map<Id, Integer>();
+        Map<Id, Integer> allergyCounts = new Map<Id, Integer>();
+        Map<Id, Integer> insuranceCounts = new Map<Id, Integer>();
+
+        for (AggregateResult ar : [
+            SELECT PatientId, COUNT(Id) cnt FROM HealthCondition
+            WHERE PatientId IN :bothIds WITH SECURITY_ENFORCED GROUP BY PatientId
+        ]) {
+            conditionCounts.put((Id) ar.get('PatientId'), (Integer) ar.get('cnt'));
+        }
+        for (AggregateResult ar : [
+            SELECT PatientId, COUNT(Id) cnt FROM MedicationStatement
+            WHERE PatientId IN :bothIds WITH SECURITY_ENFORCED GROUP BY PatientId
+        ]) {
+            medicationCounts.put((Id) ar.get('PatientId'), (Integer) ar.get('cnt'));
+        }
+        for (AggregateResult ar : [
+            SELECT PatientId, COUNT(Id) cnt FROM AllergyIntolerance
+            WHERE PatientId IN :bothIds WITH SECURITY_ENFORCED GROUP BY PatientId
+        ]) {
+            allergyCounts.put((Id) ar.get('PatientId'), (Integer) ar.get('cnt'));
+        }
+        for (AggregateResult ar : [
+            SELECT MemberId, COUNT(Id) cnt FROM MemberPlan
+            WHERE MemberId IN :bothIds WITH SECURITY_ENFORCED GROUP BY MemberId
+        ]) {
+            insuranceCounts.put((Id) ar.get('MemberId'), (Integer) ar.get('cnt'));
+        }
+
+        preview.masterConditionCount = conditionCounts.containsKey(masterAccountId) ? conditionCounts.get(masterAccountId) : 0;
+        preview.masterMedicationCount = medicationCounts.containsKey(masterAccountId) ? medicationCounts.get(masterAccountId) : 0;
+        preview.masterAllergyCount = allergyCounts.containsKey(masterAccountId) ? allergyCounts.get(masterAccountId) : 0;
+        preview.masterInsuranceCount = insuranceCounts.containsKey(masterAccountId) ? insuranceCounts.get(masterAccountId) : 0;
+
+        preview.duplicateConditionCount = conditionCounts.containsKey(duplicateAccountId) ? conditionCounts.get(duplicateAccountId) : 0;
+        preview.duplicateMedicationCount = medicationCounts.containsKey(duplicateAccountId) ? medicationCounts.get(duplicateAccountId) : 0;
+        preview.duplicateAllergyCount = allergyCounts.containsKey(duplicateAccountId) ? allergyCounts.get(duplicateAccountId) : 0;
+        preview.duplicateInsuranceCount = insuranceCounts.containsKey(duplicateAccountId) ? insuranceCounts.get(duplicateAccountId) : 0;
 
         return preview;
     }
@@ -126,7 +134,10 @@ public with sharing class PatientMergeController {
         }
 
         List<Account> masters = [
-            SELECT Id, FirstName, LastName, NRIC__c
+            SELECT Id, FirstName, LastName, NRIC__c, PersonBirthdate,
+                   PersonMobilePhone, PersonEmail, Ethnicity__c,
+                   Emergency_Contact_Name__c, Emergency_Contact_Phone__c,
+                   Emergency_Contact_Relationship__c
             FROM Account
             WHERE Id = :masterAccountId
             WITH SECURITY_ENFORCED
@@ -145,26 +156,42 @@ public with sharing class PatientMergeController {
             throw new AuraHandledException('One or both patient records not found.');
         }
 
+        Account masterRecord = masters[0];
         String duplicateIdStr = String.valueOf(duplicateAccountId);
 
-        try {
-            Database.merge(masters[0], duplicates[0]);
-        } catch (DmlException e) {
-            throw new AuraHandledException('Merge failed: ' + e.getMessage());
+        // Apply selected field values from the compare step to the master record
+        if (String.isNotBlank(fieldsChanged) && fieldsChanged != '{}') {
+            Map<String, Object> fieldMap = (Map<String, Object>) JSON.deserializeUntyped(fieldsChanged);
+            for (String fieldName : fieldMap.keySet()) {
+                Object fieldValue = fieldMap.get(fieldName);
+                String strValue = fieldValue != null ? String.valueOf(fieldValue) : null;
+                if (strValue != null && strValue != '-') {
+                    masterRecord.put(fieldName, strValue);
+                }
+            }
+            update masterRecord;
         }
 
-        MergeAuditLog__c auditLog = new MergeAuditLog__c(
-            Master_Record__c = masterAccountId,
-            Merged_Record_Id__c = duplicateIdStr,
-            Merged_By__c = UserInfo.getUserId(),
-            Fields_Changed__c = fieldsChanged
-        );
-        insert auditLog;
+        Savepoint sp = Database.setSavepoint();
+        try {
+            Database.merge(masterRecord, duplicates[0]);
 
-        MergeResult result = new MergeResult();
-        result.success = true;
-        result.masterRecordId = masterAccountId;
-        result.auditLogId = auditLog.Id;
-        return result;
+            MergeAuditLog__c auditLog = new MergeAuditLog__c(
+                Master_Record__c = masterAccountId,
+                Merged_Record_Id__c = duplicateIdStr,
+                Merged_By__c = UserInfo.getUserId(),
+                Fields_Changed__c = fieldsChanged
+            );
+            insert auditLog;
+
+            MergeResult result = new MergeResult();
+            result.success = true;
+            result.masterRecordId = masterAccountId;
+            result.auditLogId = auditLog.Id;
+            return result;
+        } catch (Exception e) {
+            Database.rollback(sp);
+            throw new AuraHandledException('Merge failed: ' + e.getMessage());
+        }
     }
 }

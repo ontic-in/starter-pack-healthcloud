@@ -24,6 +24,7 @@ export default class PatientSearchDuplicates extends NavigationMixin(LightningEl
     errorMessage = '';
     showMergeWizard = false;
     mergeRecordIds = {};
+    duplicateCheckPatientId = null;
 
     get hasResults() {
         return this.searchResults.length > 0;
@@ -97,6 +98,7 @@ export default class PatientSearchDuplicates extends NavigationMixin(LightningEl
 
         if (!result) return;
 
+        this.duplicateCheckPatientId = recordId;
         this.isLoading = true;
         this.errorMessage = '';
 
@@ -172,7 +174,7 @@ export default class PatientSearchDuplicates extends NavigationMixin(LightningEl
 
     formatDate(dateValue) {
         if (!dateValue) return '-';
-        return new Intl.DateTimeFormat('en-SG', {
+        return new Intl.DateTimeFormat(undefined, {
             day: '2-digit',
             month: 'short',
             year: 'numeric'

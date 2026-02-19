@@ -88,6 +88,8 @@ export default class PatientMergeWizard extends NavigationMixin(LightningElement
                 field: cf.field,
                 masterValue: this.formatFieldValue(masterVal),
                 duplicateValue: this.formatFieldValue(dupVal),
+                masterRawValue: masterVal,
+                duplicateRawValue: dupVal,
                 isDifferent: isDifferent,
                 selectedValue: 'master',
                 rowClass: isDifferent
@@ -136,9 +138,8 @@ export default class PatientMergeWizard extends NavigationMixin(LightningElement
 
         const fieldsChanged = {};
         this.fieldComparisons.forEach(fc => {
-            if (fc.isDifferent) {
-                fieldsChanged[fc.field] = fc.selectedValue === 'master'
-                    ? fc.masterValue : fc.duplicateValue;
+            if (fc.isDifferent && fc.selectedValue === 'duplicate') {
+                fieldsChanged[fc.field] = fc.duplicateRawValue;
             }
         });
 

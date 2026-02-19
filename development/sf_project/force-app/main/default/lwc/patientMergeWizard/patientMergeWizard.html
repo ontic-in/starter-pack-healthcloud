@@ -101,7 +101,7 @@
             <template lwc:if={isStep2}>
                 <div class="mergeWizard__body">
                     <p class="mergeWizard__instruction">
-                        Review field differences. Highlighted rows have different values.
+                        Review field differences. For highlighted rows, select which value to keep.
                     </p>
 
                     <table class="mergeWizard__table">
@@ -117,10 +117,39 @@
                                 <tr key={fc.field} class={fc.rowClass}>
                                     <td class="mergeWizard__fieldName">{fc.label}</td>
                                     <td>
-                                        <span class="mergeWizard__value">{fc.masterValue}</span>
+                                        <template lwc:if={fc.isDifferent}>
+                                            <label class="mergeWizard__radio">
+                                                <input
+                                                    type="radio"
+                                                    name={fc.field}
+                                                    data-field={fc.field}
+                                                    data-source="master"
+                                                    checked
+                                                    onchange={handleFieldSelection}
+                                                />
+                                                <span class="mergeWizard__value">{fc.masterValue}</span>
+                                            </label>
+                                        </template>
+                                        <template lwc:else>
+                                            <span class="mergeWizard__value">{fc.masterValue}</span>
+                                        </template>
                                     </td>
                                     <td>
-                                        <span class="mergeWizard__value">{fc.duplicateValue}</span>
+                                        <template lwc:if={fc.isDifferent}>
+                                            <label class="mergeWizard__radio">
+                                                <input
+                                                    type="radio"
+                                                    name={fc.field}
+                                                    data-field={fc.field}
+                                                    data-source="duplicate"
+                                                    onchange={handleFieldSelection}
+                                                />
+                                                <span class="mergeWizard__value">{fc.duplicateValue}</span>
+                                            </label>
+                                        </template>
+                                        <template lwc:else>
+                                            <span class="mergeWizard__value">{fc.duplicateValue}</span>
+                                        </template>
                                     </td>
                                 </tr>
                             </template>

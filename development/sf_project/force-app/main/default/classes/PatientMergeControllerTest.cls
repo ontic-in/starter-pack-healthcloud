@@ -102,14 +102,17 @@ private class PatientMergeControllerTest {
 
     @isTest
     static void testMergePatients_InvalidId() {
-        String fakeId = Account.SObjectType.getDescribe().getKeyPrefix() + '000000000000';
+        String keyPrefix = Account.SObjectType.getDescribe().getKeyPrefix();
+        String fakeMasterId = keyPrefix + '000000000001';
+        String fakeDuplicateId = keyPrefix + '000000000002';
 
         Test.startTest();
         try {
-            PatientMergeController.mergePatients(fakeId, fakeId, '{}');
+            PatientMergeController.mergePatients(fakeMasterId, fakeDuplicateId, '{}');
             Assert.fail('Should throw exception for invalid Id');
         } catch (AuraHandledException e) {
-            Assert.isNotNull(e.getMessage(), 'Should have error message');
+            Assert.isTrue(e.getMessage().contains('not found'),
+                'Error should indicate record not found');
         }
         Test.stopTest();
     }

@@ -25,12 +25,15 @@ public with sharing class DuplicateDetectionService {
             SELECT Standard_Form__c, Variants__c
             FROM NameVariant__mdt
             WHERE Standard_Form__c = :searchName
+            WITH SECURITY_ENFORCED
         ];
 
         for (NameVariant__mdt nv : standardMatches) {
             allVariants.add(nv.Standard_Form__c);
-            for (String v : nv.Variants__c.split(',')) {
-                allVariants.add(v.trim());
+            if (String.isNotBlank(nv.Variants__c)) {
+                for (String v : nv.Variants__c.split(',')) {
+                    allVariants.add(v.trim());
+                }
             }
         }
 
@@ -38,19 +41,24 @@ public with sharing class DuplicateDetectionService {
             List<NameVariant__mdt> allRecords = [
                 SELECT Standard_Form__c, Variants__c
                 FROM NameVariant__mdt
+                WITH SECURITY_ENFORCED
             ];
 
             for (NameVariant__mdt nv : allRecords) {
                 Set<String> variantSet = new Set<String>();
                 variantSet.add(nv.Standard_Form__c.toLowerCase());
-                for (String v : nv.Variants__c.split(',')) {
-                    variantSet.add(v.trim().toLowerCase());
+                if (String.isNotBlank(nv.Variants__c)) {
+                    for (String v : nv.Variants__c.split(',')) {
+                        variantSet.add(v.trim().toLowerCase());
+                    }
                 }
 
                 if (variantSet.contains(searchName.toLowerCase())) {
                     allVariants.add(nv.Standard_Form__c);
-                    for (String v : nv.Variants__c.split(',')) {
-                        allVariants.add(v.trim());
+                    if (String.isNotBlank(nv.Variants__c)) {
+                        for (String v : nv.Variants__c.split(',')) {
+                            allVariants.add(v.trim());
+                        }
                     }
                     break;
                 }
