@@ -1,4 +1,4 @@
-import { LightningElement, api, wire, track } from 'lwc';
+import { LightningElement, api, track } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getTemplateDetail from '@salesforce/apex/CarePlanTemplateController.getTemplateDetail';
 import saveTemplate from '@salesforce/apex/CarePlanTemplateController.saveTemplate';
@@ -47,7 +47,11 @@ const PRIORITY_OPTIONS = [
 
 export default class CarePlanTemplateEditor extends LightningElement {
     @api templateId;
-    @api mode = 'view';
+    @track _mode = 'view';
+
+    @api
+    get mode() { return this._mode; }
+    set mode(value) { this._mode = value; }
 
     @track detail = null;
     @track goals = [];
@@ -290,7 +294,7 @@ export default class CarePlanTemplateEditor extends LightningElement {
     }
 
     handleSwitchToEdit() {
-        this.mode = 'edit';
+        this._mode = 'edit';
     }
 
     showToast(title, message, variant) {

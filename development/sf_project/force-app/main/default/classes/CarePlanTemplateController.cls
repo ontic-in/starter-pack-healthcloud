@@ -50,15 +50,22 @@ public with sharing class CarePlanTemplateController {
                 return CarePlanTemplateService.versionTemplate(template.Id);
             }
             if (template.Id != null) {
-                update template;
+                SObjectAccessDecision decision = Security.stripInaccessible(
+                    AccessType.UPDATABLE, new List<CarePlanTemplate>{ template }
+                );
+                update decision.getRecords();
+                return (CarePlanTemplate) decision.getRecords()[0];
             } else {
                 if (template.Version__c == null) {
                     template.Version__c = 1;
                 }
                 template.IsActive = true;
-                insert template;
+                SObjectAccessDecision decision = Security.stripInaccessible(
+                    AccessType.CREATABLE, new List<CarePlanTemplate>{ template }
+                );
+                insert decision.getRecords();
+                return (CarePlanTemplate) decision.getRecords()[0];
             }
-            return template;
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }
@@ -76,11 +83,18 @@ public with sharing class CarePlanTemplateController {
                 goalJson, CarePlanTemplateGoal.class
             );
             if (goal.Id != null) {
-                update goal;
+                SObjectAccessDecision decision = Security.stripInaccessible(
+                    AccessType.UPDATABLE, new List<CarePlanTemplateGoal>{ goal }
+                );
+                update decision.getRecords();
+                return (CarePlanTemplateGoal) decision.getRecords()[0];
             } else {
-                insert goal;
+                SObjectAccessDecision decision = Security.stripInaccessible(
+                    AccessType.CREATABLE, new List<CarePlanTemplateGoal>{ goal }
+                );
+                insert decision.getRecords();
+                return (CarePlanTemplateGoal) decision.getRecords()[0];
             }
-            return goal;
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }
@@ -98,11 +112,18 @@ public with sharing class CarePlanTemplateController {
                 taskJson, CarePlanTemplateTask.class
             );
             if (task.Id != null) {
-                update task;
+                SObjectAccessDecision decision = Security.stripInaccessible(
+                    AccessType.UPDATABLE, new List<CarePlanTemplateTask>{ task }
+                );
+                update decision.getRecords();
+                return (CarePlanTemplateTask) decision.getRecords()[0];
             } else {
-                insert task;
+                SObjectAccessDecision decision = Security.stripInaccessible(
+                    AccessType.CREATABLE, new List<CarePlanTemplateTask>{ task }
+                );
+                insert decision.getRecords();
+                return (CarePlanTemplateTask) decision.getRecords()[0];
             }
-            return task;
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }
@@ -115,7 +136,12 @@ public with sharing class CarePlanTemplateController {
     @AuraEnabled
     public static void deleteGoal(Id goalId) {
         try {
+            if (!Schema.sObjectType.CarePlanTemplateGoal.isDeletable()) {
+                throw new AuraHandledException('Insufficient permissions to delete goal.');
+            }
             delete [SELECT Id FROM CarePlanTemplateGoal WHERE Id = :goalId WITH SECURITY_ENFORCED LIMIT 1];
+        } catch (AuraHandledException e) {
+            throw e;
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }
@@ -128,7 +154,12 @@ public with sharing class CarePlanTemplateController {
     @AuraEnabled
     public static void deleteTask(Id taskId) {
         try {
+            if (!Schema.sObjectType.CarePlanTemplateTask.isDeletable()) {
+                throw new AuraHandledException('Insufficient permissions to delete task.');
+            }
             delete [SELECT Id FROM CarePlanTemplateTask WHERE Id = :taskId WITH SECURITY_ENFORCED LIMIT 1];
+        } catch (AuraHandledException e) {
+            throw e;
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }
