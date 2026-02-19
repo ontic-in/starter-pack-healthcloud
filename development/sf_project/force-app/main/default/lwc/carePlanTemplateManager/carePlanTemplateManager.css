@@ -1,0 +1,133 @@
+/* Care Plan Template Manager (US-1.2.1) */
+/* BEM methodology */
+
+:host {
+    --color-border: #e5e5e5;
+    --color-bg-hover: #f3f3f3;
+    --color-bg-selected: #eef4ff;
+    --color-text-secondary: #444444;
+    --color-badge-code: #032d60;
+    --color-badge-code-bg: #eef4ff;
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+}
+
+/* Spinner */
+.templateManager__spinner {
+    position: relative;
+    min-height: 200px;
+}
+
+/* Error */
+.templateManager__error {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-sm) var(--spacing-md);
+    margin: var(--spacing-md);
+    background-color: #fef1ee;
+    border: 1px solid #c23934;
+    border-radius: 4px;
+    color: #c23934;
+}
+
+/* Content */
+.templateManager__content {
+    padding: 0 var(--spacing-md) var(--spacing-md);
+}
+
+.templateManager__count {
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: var(--spacing-sm);
+    padding: var(--spacing-sm) 0;
+}
+
+/* Table */
+.templateManager__table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.templateManager__table th {
+    padding: var(--spacing-sm) var(--spacing-md);
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+    background-color: #fafaf9;
+    border-bottom: 2px solid var(--color-border);
+}
+
+.templateManager__table td {
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: 0.8125rem;
+    border-bottom: 1px solid var(--color-border);
+    vertical-align: middle;
+}
+
+/* Row */
+.templateManager__row {
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.templateManager__row:hover {
+    background-color: var(--color-bg-hover);
+}
+
+.templateManager__row--selected {
+    background-color: var(--color-bg-selected);
+}
+
+.templateManager__name {
+    font-weight: 600;
+}
+
+/* Badge */
+.templateManager__badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.6875rem;
+    font-weight: 700;
+}
+
+.templateManager__badge--code {
+    background-color: var(--color-badge-code-bg);
+    color: var(--color-badge-code);
+}
+
+/* Empty State */
+.templateManager__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 3rem var(--spacing-lg);
+    text-align: center;
+}
+
+.templateManager__emptyTitle {
+    font-size: 1.125rem;
+    font-weight: 700;
+    margin: var(--spacing-md) 0 var(--spacing-sm) 0;
+}
+
+.templateManager__emptyText {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .templateManager__table th:nth-child(5),
+    .templateManager__table td:nth-child(5),
+    .templateManager__table th:nth-child(6),
+    .templateManager__table td:nth-child(6) {
+        display: none;
+    }
+}

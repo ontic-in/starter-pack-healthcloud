@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>Care Plan Template Access</label>
+    <description>Provides access to Care Plan Template objects and custom fields for clinical leads and clinicians. Grants Create/Read/Edit on templates and CRUD on goals and tasks.</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <license>Salesforce</license>
+
+    <!-- CarePlanTemplate custom fields -->
+    <fieldPermissions>
+        <field>CarePlanTemplate.Version__c</field>
+        <editable>true</editable>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>CarePlanTemplate.Previous_Version__c</field>
+        <editable>true</editable>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>CarePlanTemplate.ICD10_Code__c</field>
+        <editable>true</editable>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>CarePlanTemplate.MOH_Guideline_Ref__c</field>
+        <editable>true</editable>
+        <readable>true</readable>
+    </fieldPermissions>
+
+    <!-- CarePlanTemplateGoal custom fields -->
+    <fieldPermissions>
+        <field>CarePlanTemplateGoal.Target_Value__c</field>
+        <editable>true</editable>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>CarePlanTemplateGoal.Measure__c</field>
+        <editable>true</editable>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>CarePlanTemplateGoal.Review_Frequency__c</field>
+        <editable>true</editable>
+        <readable>true</readable>
+    </fieldPermissions>
+
+    <!-- CarePlanTemplateTask custom fields -->
+    <fieldPermissions>
+        <field>CarePlanTemplateTask.Assigned_Role__c</field>
+        <editable>true</editable>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>CarePlanTemplateTask.Task_Frequency__c</field>
+        <editable>true</editable>
+        <readable>true</readable>
+    </fieldPermissions>
+
+    <!-- Object Permissions: CarePlanTemplate (no delete) -->
+    <objectPermissions>
+        <object>CarePlanTemplate</object>
+        <allowCreate>true</allowCreate>
+        <allowDelete>false</allowDelete>
+        <allowEdit>true</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
+
+    <!-- Object Permissions: CarePlanTemplateGoal (delete allowed for editing) -->
+    <objectPermissions>
+        <object>CarePlanTemplateGoal</object>
+        <allowCreate>true</allowCreate>
+        <allowDelete>true</allowDelete>
+        <allowEdit>true</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
+
+    <!-- Object Permissions: CarePlanTemplateTask (delete allowed for editing) -->
+    <objectPermissions>
+        <object>CarePlanTemplateTask</object>
+        <allowCreate>true</allowCreate>
+        <allowDelete>true</allowDelete>
+        <allowEdit>true</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
+
+    <!-- Tab Visibility -->
+    <tabSettings>
+        <tab>standard-CarePlanTemplate</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+</PermissionSet>
