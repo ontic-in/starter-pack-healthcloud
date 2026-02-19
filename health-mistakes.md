@@ -199,3 +199,69 @@ for (String f : fields.keySet()) {
 - SDO orgs have active automation on standard objects (Case, Lead, Opportunity) that breaks test data insertion. Always check for active flows before using standard objects in tests.
 - Health Cloud standard objects have non-obvious required fields (ClinicalEncounter.Category) and auto-number Name fields. Query field metadata before writing factories.
 - Mistakes 7 and 8 are the same pattern as Mistake 1 from US-1.1.2: not checking org field requirements before writing test data. This is now a 3x repeat - needs a systematic fix (e.g., a pre-implementation field audit checklist).
+
+---
+---
+
+# Implementation Mistakes & Learnings - [US-1.1.3] PR Review Fixes
+
+**Ticket**: https://app.clickup.com/t/86d1yxw5w
+**Date**: 2026-02-19
+**Context**: Addressing 12 PR review findings from animeshdas738 on PR #5
+
+---
+
+## Mistake 12: CI Script Uses Placeholder Org Alias
+
+**What happened**: Ran `npm run ci` to validate changes before committing. The `package.json` script has `--target-org [ORG_ALIAS]` as a placeholder that was never replaced with the actual org alias.
+
+**Error**: `No authorization information found for [ORG_ALIAS]. Did you mean "my-hc-org"?`
+
+**Impact**: Had to run CI components manually with `--target-org my-hc-org` instead of the convenient npm script. Wasted ~2 min debugging.
+
+**Fix**: Ran `sf apex run test --target-org my-hc-org` directly. Also ran `npx eslint` directly on the LWC files.
+
+**Prevention**: At project setup, replace all placeholder values in `package.json` CI scripts with actual org aliases. Or use `sf config get target-org` to pull the configured default instead of hardcoding.
+
+---
+
+## Mistake 13: Original Implementation Had 12 Reviewable Issues
+
+**What happened**: The original US-1.1.3 Patient Timeline implementation (committed in a previous session) had 12 findings caught in PR review. These span 3 HIGH, 4 MEDIUM, and 5 LOW issues across Apex, LWC HTML, JS, and CSS.
+
+**Key findings that should have been caught before PR**:
+- **ClinicalEncounter missing provider/facility fields** (#1 HIGH): The controller queried ClinicalEncounter but never populated the `provider` and `facility` fields that the LWC template displays. This is a basic gap between controller output and UI expectations.
+- **Task/Event WhoId not queried** (#3 HIGH): Person Account Tasks/Events are linked via `WhoId` (to PersonContactId), not `WhatId` (to AccountId). Only querying `WhatId` misses many records. This is a core Health Cloud data model pattern.
+- **Hardcoded locale** (#6 MEDIUM): Used `'en-SG'` instead of `undefined` (browser default) in date formatting. Region-specific code should never be hardcoded.
+- **Magic strings** (#7 MEDIUM): Hardcoded `'Scheduled'` string instead of using a constant.
+- **Hardcoded CSS colors** (#12 LOW): Used raw hex colors instead of SLDS design tokens, breaking theme consistency.
+
+**Impact**: Required a full review-fix-resubmit cycle. 5 files changed, +115 -56 lines.
+
+**Prevention**:
+1. **Pre-PR checklist**: Before submitting PRs, verify:
+   - All fields referenced in LWC template are populated by the controller
+   - Person Account WhoId pattern is used for Task/Event queries
+   - No hardcoded locales, magic strings, or raw color values
+   - CSS uses SLDS design tokens with fallbacks
+   - Edge cases (null/blank inputs) have test coverage
+2. **Self-review diff**: Read through the full diff before creating the PR, checking each file against the template/controller contract.
+3. **Use Person Account WhoId pattern**: Always query `PersonContactId` from Account and include `OR WhoId IN :contactIds` when querying Task or Event for a Person Account.
+
+---
+
+## Summary (US-1.1.3 PR Review Session)
+
+| # | Mistake | Severity | Time Lost |
+|---|---------|----------|-----------|
+| 12 | CI script placeholder org alias | Low | ~2 min |
+| 13 | 12 PR review findings in original impl | High | ~30 min (review + fix cycle) |
+
+**Total estimated time lost**: ~32 minutes
+
+**Key takeaways**:
+- The `package.json` CI scripts need actual org aliases, not placeholders.
+- A pre-PR self-review checklist would have caught most of the 12 findings before the reviewer saw them.
+- Person Account WhoId pattern (querying PersonContactId for Task/Event lookups) is a core Health Cloud pattern that must be applied every time.
+- Always use SLDS design tokens in CSS, never raw hex colors.
+- Always use `undefined` (browser default) for locale in `toLocaleDateString`/`toLocaleTimeString`, never hardcode a specific locale.
