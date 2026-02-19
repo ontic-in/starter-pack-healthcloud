@@ -121,10 +121,17 @@ public with sharing class CarePlanTemplateService {
             ? original.template.Version__c : 1) + 1;
         newTemplate.Previous_Version__c = originalTemplateId;
         newTemplate.IsActive = true;
-        insert newTemplate;
+        SObjectAccessDecision templateDecision = Security.stripInaccessible(
+            AccessType.CREATABLE, new List<CarePlanTemplate>{ newTemplate }
+        );
+        insert templateDecision.getRecords();
+        newTemplate = (CarePlanTemplate) templateDecision.getRecords()[0];
 
         original.template.IsActive = false;
-        update original.template;
+        SObjectAccessDecision updateDecision = Security.stripInaccessible(
+            AccessType.UPDATABLE, new List<CarePlanTemplate>{ original.template }
+        );
+        update updateDecision.getRecords();
 
         if (!original.goals.isEmpty()) {
             List<CarePlanTemplateGoal> newGoals = new List<CarePlanTemplateGoal>();
@@ -133,7 +140,10 @@ public with sharing class CarePlanTemplateService {
                 cloned.CarePlanTemplateId = newTemplate.Id;
                 newGoals.add(cloned);
             }
-            insert newGoals;
+            SObjectAccessDecision goalsDecision = Security.stripInaccessible(
+                AccessType.CREATABLE, newGoals
+            );
+            insert goalsDecision.getRecords();
         }
 
         if (!original.tasks.isEmpty()) {
@@ -143,7 +153,10 @@ public with sharing class CarePlanTemplateService {
                 cloned.CarePlanTemplateId = newTemplate.Id;
                 newTasks.add(cloned);
             }
-            insert newTasks;
+            SObjectAccessDecision tasksDecision = Security.stripInaccessible(
+                AccessType.CREATABLE, newTasks
+            );
+            insert tasksDecision.getRecords();
         }
 
         return newTemplate;
