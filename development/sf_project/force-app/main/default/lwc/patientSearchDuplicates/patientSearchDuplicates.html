@@ -1,0 +1,191 @@
+<template>
+    <lightning-card title="Patient Search" icon-name="standard:search">
+
+        <!-- Search Bar -->
+        <div class="patientSearch__searchBar">
+            <div class="patientSearch__searchControls">
+                <lightning-combobox
+                    label="Search Type"
+                    value={searchType}
+                    options={searchTypeOptions}
+                    onchange={handleSearchTypeChange}
+                    class="patientSearch__typeSelector"
+                    variant="label-hidden">
+                </lightning-combobox>
+                <lightning-input
+                    type="text"
+                    label="Search Term"
+                    value={searchTerm}
+                    placeholder={searchPlaceholder}
+                    onchange={handleSearchTermChange}
+                    onkeypress={handleKeyPress}
+                    class="patientSearch__input"
+                    variant="label-hidden">
+                </lightning-input>
+                <lightning-button
+                    label="Search"
+                    variant="brand"
+                    onclick={handleSearch}
+                    icon-name="utility:search"
+                    class="patientSearch__searchBtn">
+                </lightning-button>
+            </div>
+        </div>
+
+        <!-- Loading Spinner -->
+        <template lwc:if={isLoading}>
+            <div class="patientSearch__spinner">
+                <lightning-spinner alternative-text="Searching..." size="medium">
+                </lightning-spinner>
+            </div>
+        </template>
+
+        <!-- Error Message -->
+        <template lwc:if={hasError}>
+            <div class="patientSearch__error">
+                <lightning-icon icon-name="utility:error" size="small" variant="error">
+                </lightning-icon>
+                <span class="slds-m-left_x-small">{errorMessage}</span>
+            </div>
+        </template>
+
+        <!-- Search Results -->
+        <template lwc:if={hasResults}>
+            <div class="patientSearch__section">
+                <div class="patientSearch__sectionHeader">
+                    <h2 class="patientSearch__sectionTitle">Search Results</h2>
+                    <span class="patientSearch__sectionCount">{searchResults.length}</span>
+                </div>
+                <table class="patientSearch__table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>NRIC</th>
+                            <th>Date of Birth</th>
+                            <th>Phone</th>
+                            <th>Confidence</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template for:each={searchResults} for:item="result">
+                            <tr key={result.patient.Id} class="patientSearch__row">
+                                <td>
+                                    <a data-record-id={result.patient.Id}
+                                       onclick={handleNavigateToRecord}
+                                       class="patientSearch__link">
+                                        {result.patient.FirstName} {result.patient.LastName}
+                                    </a>
+                                </td>
+                                <td>{result.maskedNRIC}</td>
+                                <td>{result.formattedDOB}</td>
+                                <td>{result.patient.PersonMobilePhone}</td>
+                                <td>
+                                    <span class={result.confidenceClass}>
+                                        {result.matchConfidence}%
+                                    </span>
+                                </td>
+                                <td>
+                                    <lightning-button-group>
+                                        <lightning-button
+                                            label="View"
+                                            data-record-id={result.patient.Id}
+                                            onclick={handleNavigateToRecord}
+                                            variant="neutral"
+                                            icon-name="utility:preview">
+                                        </lightning-button>
+                                        <lightning-button
+                                            label="Check Duplicates"
+                                            data-record-id={result.patient.Id}
+                                            onclick={handleCheckDuplicates}
+                                            variant="neutral"
+                                            icon-name="utility:warning">
+                                        </lightning-button>
+                                    </lightning-button-group>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </template>
+
+        <!-- No Results -->
+        <template lwc:if={hasNoResults}>
+            <div class="patientSearch__empty">
+                <lightning-icon icon-name="utility:info" size="small"></lightning-icon>
+                <span class="slds-m-left_x-small">No patients found matching your search criteria.</span>
+            </div>
+        </template>
+
+        <!-- Duplicate Detection Panel -->
+        <template lwc:if={hasDuplicates}>
+            <div class="patientSearch__section patientSearch__section--warning">
+                <div class="patientSearch__sectionHeader">
+                    <lightning-icon icon-name="utility:warning" size="small" variant="warning">
+                    </lightning-icon>
+                    <h2 class="patientSearch__sectionTitle slds-m-left_x-small">
+                        Potential Duplicates Found
+                    </h2>
+                    <span class="patientSearch__sectionCount">{duplicateResults.length}</span>
+                </div>
+                <table class="patientSearch__table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>NRIC</th>
+                            <th>Date of Birth</th>
+                            <th>Phone</th>
+                            <th>Match Confidence</th>
+                            <th>Reason</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template for:each={duplicateResults} for:item="dup">
+                            <tr key={dup.patient.Id} class="patientSearch__row">
+                                <td>
+                                    <a data-record-id={dup.patient.Id}
+                                       onclick={handleNavigateToRecord}
+                                       class="patientSearch__link">
+                                        {dup.patient.FirstName} {dup.patient.LastName}
+                                    </a>
+                                </td>
+                                <td>{dup.maskedNRIC}</td>
+                                <td>{dup.formattedDOB}</td>
+                                <td>{dup.patient.PersonMobilePhone}</td>
+                                <td>
+                                    <span class={dup.confidenceClass}>
+                                        {dup.matchConfidence}%
+                                    </span>
+                                </td>
+                                <td>{dup.matchReason}</td>
+                                <td>
+                                    <lightning-button
+                                        label="Merge Records"
+                                        data-master-id={searchResults[0].patient.Id}
+                                        data-duplicate-id={dup.patient.Id}
+                                        onclick={handleMerge}
+                                        variant="destructive"
+                                        icon-name="utility:merge">
+                                    </lightning-button>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </template>
+
+        <!-- Merge Wizard Modal -->
+        <template lwc:if={showMergeWizard}>
+            <c-patient-merge-wizard
+                master-account-id={mergeRecordIds.masterId}
+                duplicate-account-id={mergeRecordIds.duplicateId}
+                onmergecomplete={handleMergeComplete}
+                onmergecancel={handleMergeCancel}>
+            </c-patient-merge-wizard>
+        </template>
+
+    </lightning-card>
+</template>

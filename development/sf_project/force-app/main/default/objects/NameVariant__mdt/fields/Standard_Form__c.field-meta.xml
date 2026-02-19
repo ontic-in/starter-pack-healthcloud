@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Standard_Form__c</fullName>
+    <label>Standard Form</label>
+    <type>Text</type>
+    <length>100</length>
+    <required>true</required>
+    <unique>false</unique>
+    <externalId>false</externalId>
+    <description>The standard or canonical form of the name (e.g., Muhammad, Tan, Lee).</description>
+</CustomField>

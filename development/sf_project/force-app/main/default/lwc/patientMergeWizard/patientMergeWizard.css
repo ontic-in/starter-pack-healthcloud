@@ -1,0 +1,257 @@
+/* Patient Merge Wizard (US-1.1.4) */
+/* BEM methodology - child component of patientSearchDuplicates */
+
+:host {
+    --color-border: #e5e5e5;
+    --color-bg-highlight: #fef0cd;
+    --color-text-secondary: #444444;
+    --color-success-bg: #e6f9e6;
+    --color-confirm-bg: #fef8e7;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+}
+
+/* Modal */
+.mergeWizard__modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9001;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mergeWizard__backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.mergeWizard__container {
+    position: relative;
+    width: 90%;
+    max-width: 800px;
+    max-height: 85vh;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header */
+.mergeWizard__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-md) var(--spacing-lg);
+    background-color: #032d60;
+    color: #ffffff;
+    border-radius: 8px 8px 0 0;
+}
+
+.mergeWizard__title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+/* Progress */
+.mergeWizard__progress {
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-bottom: 1px solid var(--color-border);
+}
+
+/* Body */
+.mergeWizard__body {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--spacing-lg);
+}
+
+.mergeWizard__instruction {
+    margin-bottom: var(--spacing-md);
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+}
+
+/* Cards (Step 1) */
+.mergeWizard__cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-md);
+}
+
+.mergeWizard__card {
+    padding: var(--spacing-md);
+    border: 2px solid var(--color-border);
+    border-radius: 8px;
+    background-color: #fafaf9;
+}
+
+.mergeWizard__card--selected {
+    border-color: #0176d3;
+    background-color: #eef4ff;
+}
+
+.mergeWizard__cardLabel {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.mergeWizard__cardName {
+    font-size: 1.125rem;
+    font-weight: 700;
+    margin: 0 0 var(--spacing-sm) 0;
+}
+
+.mergeWizard__cardField {
+    font-size: 0.8125rem;
+    color: var(--color-text-secondary);
+    margin-bottom: 4px;
+}
+
+.mergeWizard__fieldLabel {
+    font-weight: 600;
+}
+
+/* Info Banner */
+.mergeWizard__info {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-sm) var(--spacing-md);
+    margin-top: var(--spacing-md);
+    background-color: #eef4ff;
+    border: 1px solid #0176d3;
+    border-radius: 4px;
+    font-size: 0.8125rem;
+}
+
+/* Table (Step 2) */
+.mergeWizard__table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.mergeWizard__table th {
+    padding: var(--spacing-sm) var(--spacing-md);
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+    background-color: #fafaf9;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.mergeWizard__table td {
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: 0.8125rem;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.mergeWizard__row--different {
+    background-color: var(--color-bg-highlight);
+}
+
+.mergeWizard__fieldName {
+    font-weight: 600;
+    color: var(--color-text-secondary);
+}
+
+/* Confirm (Step 3) */
+.mergeWizard__confirmBox {
+    display: flex;
+    padding: var(--spacing-lg);
+    background-color: var(--color-confirm-bg);
+    border: 1px solid #fe9339;
+    border-radius: 8px;
+}
+
+.mergeWizard__confirmTitle {
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0 0 var(--spacing-sm) 0;
+}
+
+.mergeWizard__confirmList {
+    margin: var(--spacing-sm) 0 0 var(--spacing-md);
+    padding: 0;
+    list-style-type: disc;
+}
+
+.mergeWizard__confirmList li {
+    margin-bottom: 4px;
+    font-size: 0.875rem;
+}
+
+/* Success (Step 4) */
+.mergeWizard__success {
+    display: flex;
+    padding: var(--spacing-lg);
+    background-color: var(--color-success-bg);
+    border: 1px solid #2e844a;
+    border-radius: 8px;
+}
+
+.mergeWizard__successTitle {
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0 0 var(--spacing-sm) 0;
+    color: #2e844a;
+}
+
+/* Error */
+.mergeWizard__error {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-sm) var(--spacing-md);
+    margin: var(--spacing-md) var(--spacing-lg);
+    background-color: #fef1ee;
+    border: 1px solid #c23934;
+    border-radius: 4px;
+    color: #c23934;
+}
+
+/* Spinner */
+.mergeWizard__spinner {
+    position: relative;
+    min-height: 150px;
+}
+
+/* Footer */
+.mergeWizard__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-top: 1px solid var(--color-border);
+    border-radius: 0 0 8px 8px;
+}
+
+.mergeWizard__footerRight {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .mergeWizard__cards {
+        grid-template-columns: 1fr;
+    }
+
+    .mergeWizard__container {
+        width: 95%;
+        max-height: 90vh;
+    }
+}

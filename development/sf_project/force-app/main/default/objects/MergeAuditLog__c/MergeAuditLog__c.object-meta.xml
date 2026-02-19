@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>Merge Audit Log</label>
+    <pluralLabel>Merge Audit Logs</pluralLabel>
+    <nameField>
+        <label>Merge Audit Log Name</label>
+        <type>AutoNumber</type>
+        <displayFormat>MAL-{00000}</displayFormat>
+    </nameField>
+    <deploymentStatus>Deployed</deploymentStatus>
+    <sharingModel>ReadWrite</sharingModel>
+    <description>Tracks all patient merge operations for compliance and audit purposes.</description>
+</CustomObject>

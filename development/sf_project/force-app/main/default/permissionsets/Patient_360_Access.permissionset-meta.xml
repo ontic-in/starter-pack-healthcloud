@@ -105,6 +105,39 @@
         <viewAllRecords>false</viewAllRecords>
     </objectPermissions>
 
+    <!-- Object Permissions: MergeAuditLog (US-1.1.4) -->
+    <objectPermissions>
+        <object>MergeAuditLog__c</object>
+        <allowCreate>true</allowCreate>
+        <allowDelete>false</allowDelete>
+        <allowEdit>true</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
+
+    <!-- Custom Fields on MergeAuditLog (US-1.1.4) -->
+    <fieldPermissions>
+        <field>MergeAuditLog__c.Master_Record__c</field>
+        <editable>true</editable>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>MergeAuditLog__c.Merged_Record_Id__c</field>
+        <editable>true</editable>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>MergeAuditLog__c.Merged_By__c</field>
+        <editable>true</editable>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>MergeAuditLog__c.Fields_Changed__c</field>
+        <editable>true</editable>
+        <readable>true</readable>
+    </fieldPermissions>
+
     <!-- Object Permissions: CoverageBenefit -->
     <objectPermissions>
         <object>CoverageBenefit</object>
