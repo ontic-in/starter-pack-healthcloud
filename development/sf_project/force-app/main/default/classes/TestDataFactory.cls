@@ -241,4 +241,74 @@ public class TestDataFactory {
         insert c;
         return c;
     }
+
+    // ── Care Plan Template factories (US-1.2.1) ──
+
+    /**
+     * @description Creates and inserts a CarePlanTemplate with custom fields.
+     * @param name Template name.
+     * @param icd10Code ICD-10 condition code.
+     * @param version Template version number.
+     * @return The inserted CarePlanTemplate record.
+     */
+    public static CarePlanTemplate createCarePlanTemplate(
+        String name, String icd10Code, Integer version
+    ) {
+        CarePlanTemplate template = new CarePlanTemplate(
+            Name = name,
+            ICD10_Code__c = icd10Code,
+            Version__c = version,
+            IsActive = true
+        );
+        insert template;
+        return template;
+    }
+
+    /**
+     * @description Creates and inserts a CarePlanTemplateGoal with custom fields.
+     * @param templateId Parent template ID.
+     * @param goalName Goal name.
+     * @param targetValue Target value string.
+     * @param measure Measurement method.
+     * @param reviewFrequency Review frequency picklist value.
+     * @return The inserted CarePlanTemplateGoal record.
+     */
+    public static CarePlanTemplateGoal createCarePlanTemplateGoal(
+        Id templateId, String goalName, String targetValue,
+        String measure, String reviewFrequency
+    ) {
+        CarePlanTemplateGoal goal = new CarePlanTemplateGoal(
+            CarePlanTemplateId = templateId,
+            Name = goalName,
+            Target_Value__c = targetValue,
+            Measure__c = measure,
+            Review_Frequency__c = reviewFrequency
+        );
+        insert goal;
+        return goal;
+    }
+
+    /**
+     * @description Creates and inserts a CarePlanTemplateTask with custom fields.
+     * @param templateId Parent template ID.
+     * @param taskName Task subject.
+     * @param assignedRole Role picklist value.
+     * @param taskFrequency Frequency picklist value.
+     * @param priority Task priority.
+     * @return The inserted CarePlanTemplateTask record.
+     */
+    public static CarePlanTemplateTask createCarePlanTemplateTask(
+        Id templateId, String taskName, String assignedRole,
+        String taskFrequency, String priority
+    ) {
+        CarePlanTemplateTask task = new CarePlanTemplateTask(
+            CarePlanTemplateId = templateId,
+            Subject = taskName,
+            Assigned_Role__c = assignedRole,
+            Task_Frequency__c = taskFrequency,
+            Priority = priority
+        );
+        insert task;
+        return task;
+    }
 }

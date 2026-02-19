@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Target_Value__c</fullName>
+    <label>Target Value</label>
+    <type>Text</type>
+    <length>100</length>
+    <required>false</required>
+    <unique>false</unique>
+    <externalId>false</externalId>
+    <description>Measurable target for this goal (e.g., less than 7.0%, less than 140/90 mmHg)</description>
+    <inlineHelpText>Target value to achieve for this goal</inlineHelpText>
+</CustomField>
