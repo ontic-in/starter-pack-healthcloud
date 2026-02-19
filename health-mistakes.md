@@ -1,4 +1,10 @@
-# Implementation Mistakes & Learnings - [US-1.1.2] Patient 360 View
+# Implementation Mistakes & Learnings - Health Cloud Starter Pack
+
+This file tracks mistakes and learnings across all tickets for continuous improvement.
+
+---
+
+# [US-1.1.2] Patient 360 View
 
 **Ticket**: https://app.clickup.com/t/86d1yxw5r
 **Date**: 2026-02-18
@@ -102,3 +108,123 @@ for (String f : fields.keySet()) {
 **Total estimated time lost**: ~12 minutes
 
 **Key takeaway**: Query the org first, write tests second. Health Cloud objects have non-obvious field dependencies that schema describe alone won't reveal.
+
+---
+---
+
+# [US-1.1.4] Patient Search & Duplicate Detection
+
+**Ticket**: https://app.clickup.com/t/86d1yxw61
+**Date**: 2026-02-19
+
+---
+
+## Mistake 7: ClickUp Status Name Mismatch (Repeat)
+
+**What happened**: Tried to set ticket status to `"in development"` but the workspace uses `"in progress"`. Same mistake as US-1.1.2 Mistake #2.
+
+**Error**: ClickUp API rejected the status value.
+
+**Impact**: Low - extra API call to discover correct status names.
+
+**Fix**: Queried list statuses via `clickup.workspace.getHierarchy()` and found the correct status name.
+
+**Prevention**: This is now a **known pattern**. Always query available statuses before updating. The workspace uses: `to do`, `in progress`, `ready for pr`, `complete` (not "in development", "done", etc.).
+
+**Repeat of**: Mistake #2. Need to internalize the workspace status vocabulary.
+
+---
+
+## Mistake 8: ClickUp findMember() Returns Null for Display Names
+
+**What happened**: Called `clickup.workspace.findMember('das.animesh')` expecting it to match by username/email. It returned null.
+
+**Impact**: Low - had to fetch all members and search manually.
+
+**Fix**: Used `clickup.workspace.getMembers()` then filtered the raw JSON for "animesh" to find member ID `100968061`.
+
+**Prevention**: `findMember()` may not match on all name formats. When assigning users, use `getMembers()` and search by partial name match. Cache the member ID once found (Animesh Das = `100968061`).
+
+---
+
+## Mistake 9: Git safe.directory Ownership Error
+
+**What happened**: Running `git checkout main` failed with `fatal: detected dubious ownership in repository`.
+
+**Error**: `fatal: detected dubious ownership in repository at '/home/dev/workspace/starter-pack-healthcloud'`
+
+**Impact**: Low - one-time fix per session.
+
+**Fix**: `git config --global --add safe.directory /home/dev/workspace/starter-pack-healthcloud`
+
+**Prevention**: This happens in container environments where the repo is mounted with different ownership. Add safe.directory config at session start if git commands fail.
+
+---
+
+## Mistake 10: Apex Syntax Checker False Positives on Multi-line SOQL
+
+**What happened**: The local `apex_syntax_check` tool reported errors on multi-line SOQL queries in Apex classes (e.g., `PatientSearchController.cls`). Verified by checking the already-deployed `Patient360Controller.cls` which shows the same "errors" but works fine in the org.
+
+**Impact**: Medium - caused initial concern about code correctness, required verification against known-good code.
+
+**Fix**: Confirmed this is a tool limitation, not a code issue. The ANTLR-based local parser doesn't handle multi-line SOQL the same way the Salesforce compiler does.
+
+**Prevention**: Don't rely solely on `apex_syntax_check` for SOQL validation. If it reports errors only on multi-line SOQL (especially around `FROM`, `WHERE` on separate lines), cross-reference with existing deployed classes. The real validation is `sf project deploy`.
+
+---
+
+## Mistake 11: Git Index Lock File (Repeat)
+
+**What happened**: Got `fatal: Unable to create '.git/index.lock': File exists` when staging files. Same as US-1.1.2 Mistake #5.
+
+**Fix**: `rm -f .git/index.lock`
+
+**Prevention**: Common in container/shared environments. Check for and remove stale lock files if git operations fail.
+
+**Repeat of**: Mistake #5.
+
+---
+
+## Mistake 12: Plan File Permission Denied
+
+**What happened**: Attempted to write the implementation plan to `/home/exo/.claude/plans/` but got permission denied.
+
+**Impact**: Low - wrote plan to `.exo/plan-86d1yxw61.md` instead.
+
+**Fix**: Used the project-local `.exo/` directory for plan files.
+
+**Prevention**: Always write plan files to the project `.exo/` directory, not to system paths. The `/home/exo/` directory has restricted permissions.
+
+---
+
+## Mistake 13: GitHub Username != ClickUp Username
+
+**What happened**: Tried to assign PR to `das.animesh` (the ClickUp display name format) on GitHub. GitHub returned `'das.animesh' not found`. The actual GitHub username is `animeshdas738`.
+
+**Impact**: Low - had to list repo collaborators to find the correct username.
+
+**Fix**: Ran `gh api repos/.../collaborators --jq '.[].login'` to list all collaborators, found `animeshdas738`.
+
+**Prevention**: ClickUp usernames and GitHub usernames are different systems. Always verify the GitHub username via `gh api repos/<owner>/<repo>/collaborators` before assigning PRs. Known mapping: **Animesh Das** = ClickUp ID `100968061` / GitHub `animeshdas738`.
+
+---
+
+## Summary (US-1.1.4)
+
+| # | Mistake | Severity | Time Lost | Repeat? |
+|---|---------|----------|-----------|---------|
+| 7 | ClickUp status name wrong | Low | ~1 min | Yes (#2) |
+| 8 | findMember() null for display names | Low | ~2 min | No |
+| 9 | Git safe.directory ownership | Low | ~30 sec | No |
+| 10 | Apex syntax checker SOQL false positives | Medium | ~5 min | No |
+| 11 | Git index lock file | Low | ~30 sec | Yes (#5) |
+| 12 | Plan file permission denied | Low | ~30 sec | No |
+| 13 | GitHub username != ClickUp username | Low | ~2 min | No |
+
+**Total estimated time lost**: ~12 minutes
+
+**Key takeaways**:
+- **Repeated mistakes (#2, #5)**: ClickUp status names and git lock files - need to internalize these patterns
+- **Platform username mapping**: Maintain a team member mapping (ClickUp ID / GitHub username / display name)
+- **Local tooling limits**: `apex_syntax_check` doesn't handle multi-line SOQL - trust `sf project deploy` for real validation
+- **Container awareness**: Git safe.directory and index.lock are container environment artifacts, not code issues
