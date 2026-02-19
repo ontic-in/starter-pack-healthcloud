@@ -1,0 +1,253 @@
+<template>
+    <section class="mergeWizard__modal" role="dialog" aria-modal="true" aria-label="Merge Patients">
+        <div class="mergeWizard__backdrop" onclick={handleCancel}></div>
+        <div class="mergeWizard__container">
+
+            <!-- Header -->
+            <header class="mergeWizard__header">
+                <h2 class="mergeWizard__title">Merge Patient Records</h2>
+                <lightning-button-icon
+                    icon-name="utility:close"
+                    alternative-text="Close"
+                    onclick={handleCancel}
+                    variant="bare-inverse">
+                </lightning-button-icon>
+            </header>
+
+            <!-- Progress -->
+            <div class="mergeWizard__progress">
+                <lightning-progress-indicator current-step={currentStep} type="base">
+                    <lightning-progress-step label="Select Master" value="1"></lightning-progress-step>
+                    <lightning-progress-step label="Compare Fields" value="2"></lightning-progress-step>
+                    <lightning-progress-step label="Confirm" value="3"></lightning-progress-step>
+                    <lightning-progress-step label="Complete" value="4"></lightning-progress-step>
+                </lightning-progress-indicator>
+            </div>
+
+            <!-- Loading -->
+            <template lwc:if={isLoading}>
+                <div class="mergeWizard__spinner">
+                    <lightning-spinner alternative-text="Processing..." size="medium">
+                    </lightning-spinner>
+                </div>
+            </template>
+
+            <!-- Error -->
+            <template lwc:if={hasError}>
+                <div class="mergeWizard__error">
+                    <lightning-icon icon-name="utility:error" size="small" variant="error">
+                    </lightning-icon>
+                    <span class="slds-m-left_x-small">{errorMessage}</span>
+                </div>
+            </template>
+
+            <!-- Step 1: Select Master Record -->
+            <template lwc:if={isStep1}>
+                <div class="mergeWizard__body">
+                    <p class="mergeWizard__instruction">
+                        The master record will be kept. The duplicate record will be merged into it.
+                    </p>
+
+                    <template lwc:if={preview}>
+                        <div class="mergeWizard__cards">
+                            <div class="mergeWizard__card mergeWizard__card--selected">
+                                <div class="mergeWizard__cardLabel">Master Record</div>
+                                <h3 class="mergeWizard__cardName">{masterName}</h3>
+                                <div class="mergeWizard__cardField">
+                                    <span class="mergeWizard__fieldLabel">NRIC:</span>
+                                    {preview.masterRecord.NRIC__c}
+                                </div>
+                                <div class="mergeWizard__cardField">
+                                    <span class="mergeWizard__fieldLabel">Related Records:</span>
+                                    {preview.masterConditionCount} conditions,
+                                    {preview.masterMedicationCount} medications,
+                                    {preview.masterAllergyCount} allergies,
+                                    {preview.masterInsuranceCount} insurance
+                                </div>
+                            </div>
+
+                            <div class="mergeWizard__card">
+                                <div class="mergeWizard__cardLabel">Duplicate Record</div>
+                                <h3 class="mergeWizard__cardName">{duplicateName}</h3>
+                                <div class="mergeWizard__cardField">
+                                    <span class="mergeWizard__fieldLabel">NRIC:</span>
+                                    {preview.duplicateRecord.NRIC__c}
+                                </div>
+                                <div class="mergeWizard__cardField">
+                                    <span class="mergeWizard__fieldLabel">Related Records:</span>
+                                    {preview.duplicateConditionCount} conditions,
+                                    {preview.duplicateMedicationCount} medications,
+                                    {preview.duplicateAllergyCount} allergies,
+                                    {preview.duplicateInsuranceCount} insurance
+                                </div>
+                            </div>
+                        </div>
+
+                        <template lwc:if={totalRelatedRecords}>
+                            <div class="mergeWizard__info">
+                                <lightning-icon icon-name="utility:info" size="x-small">
+                                </lightning-icon>
+                                <span class="slds-m-left_x-small">
+                                    {totalRelatedRecords} related records from the duplicate
+                                    will be moved to the master record.
+                                </span>
+                            </div>
+                        </template>
+                    </template>
+                </div>
+            </template>
+
+            <!-- Step 2: Field Comparison -->
+            <template lwc:if={isStep2}>
+                <div class="mergeWizard__body">
+                    <p class="mergeWizard__instruction">
+                        Review field differences. For highlighted rows, select which value to keep.
+                    </p>
+
+                    <table class="mergeWizard__table">
+                        <thead>
+                            <tr>
+                                <th>Field</th>
+                                <th>Master Value</th>
+                                <th>Duplicate Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={fieldComparisons} for:item="fc">
+                                <tr key={fc.field} class={fc.rowClass}>
+                                    <td class="mergeWizard__fieldName">{fc.label}</td>
+                                    <td>
+                                        <template lwc:if={fc.isDifferent}>
+                                            <label class="mergeWizard__radio">
+                                                <input
+                                                    type="radio"
+                                                    name={fc.field}
+                                                    data-field={fc.field}
+                                                    data-source="master"
+                                                    checked
+                                                    onchange={handleFieldSelection}
+                                                />
+                                                <span class="mergeWizard__value">{fc.masterValue}</span>
+                                            </label>
+                                        </template>
+                                        <template lwc:else>
+                                            <span class="mergeWizard__value">{fc.masterValue}</span>
+                                        </template>
+                                    </td>
+                                    <td>
+                                        <template lwc:if={fc.isDifferent}>
+                                            <label class="mergeWizard__radio">
+                                                <input
+                                                    type="radio"
+                                                    name={fc.field}
+                                                    data-field={fc.field}
+                                                    data-source="duplicate"
+                                                    onchange={handleFieldSelection}
+                                                />
+                                                <span class="mergeWizard__value">{fc.duplicateValue}</span>
+                                            </label>
+                                        </template>
+                                        <template lwc:else>
+                                            <span class="mergeWizard__value">{fc.duplicateValue}</span>
+                                        </template>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </template>
+
+            <!-- Step 3: Confirm Merge -->
+            <template lwc:if={isStep3}>
+                <div class="mergeWizard__body">
+                    <div class="mergeWizard__confirmBox">
+                        <lightning-icon icon-name="utility:warning" size="medium" variant="warning">
+                        </lightning-icon>
+                        <div class="slds-m-left_medium">
+                            <h3 class="mergeWizard__confirmTitle">Confirm Merge</h3>
+                            <p>This action cannot be undone. The following will happen:</p>
+                            <ul class="mergeWizard__confirmList">
+                                <li><strong>{masterName}</strong> will be the surviving record</li>
+                                <li><strong>{duplicateName}</strong> will be permanently deleted</li>
+                                <template lwc:if={totalRelatedRecords}>
+                                    <li>{totalRelatedRecords} related records will be reassigned to the master</li>
+                                </template>
+                                <li>An audit log entry will be created</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Step 4: Complete -->
+            <template lwc:if={isStep4}>
+                <div class="mergeWizard__body">
+                    <div class="mergeWizard__success">
+                        <lightning-icon icon-name="utility:success" size="medium" variant="success">
+                        </lightning-icon>
+                        <div class="slds-m-left_medium">
+                            <h3 class="mergeWizard__successTitle">Merge Complete</h3>
+                            <p>Patient records have been successfully merged.</p>
+                            <p class="slds-m-top_small">
+                                Master record: <strong>{masterName}</strong>
+                            </p>
+                            <lightning-button
+                                label="View Master Record"
+                                variant="brand"
+                                onclick={handleViewMasterRecord}
+                                class="slds-m-top_small"
+                                icon-name="utility:preview">
+                            </lightning-button>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Footer -->
+            <footer class="mergeWizard__footer">
+                <template lwc:if={isStep4}>
+                    <lightning-button label="Done" variant="brand" onclick={handleDone}>
+                    </lightning-button>
+                </template>
+                <template lwc:else>
+                    <lightning-button label="Cancel" onclick={handleCancel}>
+                    </lightning-button>
+                    <div class="mergeWizard__footerRight">
+                        <template lwc:if={isStep2}>
+                            <lightning-button label="Back" onclick={handleBack}>
+                            </lightning-button>
+                        </template>
+                        <template lwc:if={isStep3}>
+                            <lightning-button label="Back" onclick={handleBack}>
+                            </lightning-button>
+                        </template>
+                        <template lwc:if={isStep1}>
+                            <lightning-button
+                                label="Next: Compare Fields"
+                                variant="brand"
+                                onclick={handleNext}>
+                            </lightning-button>
+                        </template>
+                        <template lwc:if={isStep2}>
+                            <lightning-button
+                                label="Next: Confirm"
+                                variant="brand"
+                                onclick={handleNext}>
+                            </lightning-button>
+                        </template>
+                        <template lwc:if={isStep3}>
+                            <lightning-button
+                                label="Merge Records"
+                                variant="destructive"
+                                onclick={handleConfirmMerge}
+                                icon-name="utility:merge">
+                            </lightning-button>
+                        </template>
+                    </div>
+                </template>
+            </footer>
+
+        </div>
+    </section>
+</template>

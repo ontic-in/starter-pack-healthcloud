@@ -169,4 +169,77 @@ public class TestDataFactory {
         insert plan;
         return plan;
     }
+
+    /**
+     * @description Creates multiple patients with varied demographics for search and
+     *              duplicate detection testing. Includes Singapore name variants.
+     * @return List of inserted Account records.
+     */
+    public static List<Account> createPatientsForSearchTests() {
+        Id personAccountRTId = Schema.SObjectType.Account.getRecordTypeInfosByName()
+            .get('Person Account').getRecordTypeId();
+
+        List<Account> patients = new List<Account>();
+
+        patients.add(new Account(
+            RecordTypeId = personAccountRTId,
+            FirstName = 'Mei Ling',
+            LastName = 'Tan',
+            NRIC__c = 'S8515360A',
+            PersonBirthdate = Date.newInstance(1985, 3, 15),
+            PersonMobilePhone = '+6591234567'
+        ));
+
+        patients.add(new Account(
+            RecordTypeId = personAccountRTId,
+            FirstName = 'Wei Ming',
+            LastName = 'Chen',
+            NRIC__c = 'S9012345B',
+            PersonBirthdate = Date.newInstance(1990, 6, 20),
+            PersonMobilePhone = '+6598765432'
+        ));
+
+        patients.add(new Account(
+            RecordTypeId = personAccountRTId,
+            FirstName = 'Muhammad',
+            LastName = 'Ibrahim',
+            NRIC__c = 'S8801234C',
+            PersonBirthdate = Date.newInstance(1988, 1, 10),
+            PersonMobilePhone = '+6587654321'
+        ));
+
+        patients.add(new Account(
+            RecordTypeId = personAccountRTId,
+            FirstName = 'Priya',
+            LastName = 'Kumar',
+            NRIC__c = 'S9512345D',
+            PersonBirthdate = Date.newInstance(1995, 12, 25),
+            PersonMobilePhone = '+6576543210'
+        ));
+
+        insert patients;
+        return patients;
+    }
+
+    /**
+     * @description Creates and inserts a MergeAuditLog record.
+     * @param masterRecordId The surviving master Account Id.
+     * @param mergedRecordId The Id of the merged (deleted) record as text.
+     * @param fieldsChanged JSON description of field changes.
+     * @return The inserted MergeAuditLog__c record.
+     */
+    public static MergeAuditLog__c createMergeAuditLog(
+        Id masterRecordId,
+        String mergedRecordId,
+        String fieldsChanged
+    ) {
+        MergeAuditLog__c auditLog = new MergeAuditLog__c(
+            Master_Record__c = masterRecordId,
+            Merged_Record_Id__c = mergedRecordId,
+            Merged_By__c = UserInfo.getUserId(),
+            Fields_Changed__c = fieldsChanged
+        );
+        insert auditLog;
+        return auditLog;
+    }
 }

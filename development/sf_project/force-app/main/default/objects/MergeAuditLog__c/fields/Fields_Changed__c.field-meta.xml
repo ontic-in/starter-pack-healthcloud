@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Fields_Changed__c</fullName>
+    <label>Fields Changed</label>
+    <type>LongTextArea</type>
+    <length>32000</length>
+    <visibleLines>5</visibleLines>
+    <required>false</required>
+    <description>JSON summary of field values that were changed during the merge operation.</description>
+</CustomField>
