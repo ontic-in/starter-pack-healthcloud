@@ -775,6 +775,38 @@ for (ChildRelationship cr : Schema.SObjectType.CarePlanTemplate.getChildRelation
 
 ---
 
+## Mistake 34: No PR Created Before Requesting PR Review Comments
+
+**What happened**: On branch `clickup-86d1yxwbh` with 9 commits ahead of main, asked to "look at PR comments on this branch." No PR existed - the branch had been developed and pushed but a pull request was never opened on GitHub.
+
+**Impact**: Low - ~2 min to discover the gap and create the PR.
+
+**Fix**: Created PR #8 using `gh pr create` with a comprehensive summary, test plan, and ClickUp link.
+
+**Prevention**:
+1. **Create PR early** - Open a draft PR as soon as the first commit is pushed to a feature branch
+2. **Include PR creation in the commit workflow** - After first push to a new branch, prompt to create a PR
+3. **Branch without PR = invisible work** - PRs are the unit of review; code without a PR cannot be reviewed
+
+---
+
+## Mistake 35: ClickUp findMember SDK Method Returns Null for Valid Members
+
+**What happened**: When trying to assign ticket `86d1yxwbh` to Animesh Das using `clickup.workspace.findMember('das.animesh')`, the method returned `null` despite the member existing in the workspace. The `getMembers()` method also returned empty objects (`{}`) when accessed with standard property names (`m.name`, `m.email`).
+
+**Root cause**: The ClickUp MCP SDK's `findMember` method and member object property mapping don't match the raw API response structure. Members are nested under a `user` property (e.g., `member.user.email` not `member.email`).
+
+**Impact**: Low - ~2 min to debug by dumping raw JSON and finding the correct structure.
+
+**Fix**: Used `getMembers()` then `JSON.stringify()` to inspect raw structure. Found member data nested under `.user` property. Extracted user ID (`100968061`) and used `clickup.tasks.update({ taskId, assignees: { add: [userId] } })`.
+
+**Prevention**:
+1. **Always inspect raw API responses first** when SDK convenience methods fail
+2. **Cache known team member IDs** in session notes or project config to avoid repeated lookups
+3. **Known team members**: Animesh Das = ID `100968061`, email `das.animesh@realfast.ai`
+
+---
+
 ## Summary (Session 2026-02-20)
 
 | # | Mistake | Severity | Time Lost | Repeat? |
@@ -782,10 +814,14 @@ for (ChildRelationship cr : Schema.SObjectType.CarePlanTemplate.getChildRelation
 | 31 | Git safe.directory ownership | Low | ~30 sec | Yes (#16) |
 | 32 | Git index lock file | Low | ~30 sec | Yes (#5, #11, #18, #26) |
 | 33 | Rebase with 3 sequential merge conflicts | Medium | ~5 min | Yes (#25) |
+| 34 | No PR created before requesting review | Low | ~2 min | No |
+| 35 | ClickUp findMember SDK returns null | Low | ~2 min | No |
 
-**Total estimated time lost**: ~6 minutes
+**Total estimated time lost**: ~10 minutes
 
 **Key takeaways**:
 - **Git safe.directory and index.lock are permanent container artifacts** - should be handled automatically, not manually each session
 - **Parallel branches + shared files = guaranteed conflicts** - accept this as cost of parallel development, not a preventable mistake
 - **Renumbering mistakes during conflict resolution** is tedious but necessary to maintain a clean global sequence
+- **Create PRs early** - a branch without a PR is invisible work that can't be reviewed
+- **SDK convenience methods can fail silently** - always have a raw API fallback and inspect response structures when methods return unexpected nulls
