@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>MCR_Number__c</fullName>
+    <label>MCR Number</label>
+    <type>Text</type>
+    <length>10</length>
+    <required>false</required>
+    <unique>true</unique>
+    <caseSensitive>false</caseSensitive>
+    <externalId>true</externalId>
+    <description>Singapore Medical Council Registration number for licensed healthcare practitioners</description>
+    <inlineHelpText>Enter the provider MCR number (e.g., M12345A)</inlineHelpText>
+</CustomField>
