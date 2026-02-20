@@ -203,6 +203,13 @@ export default class ProviderDirectory extends NavigationMixin(LightningElement)
     // Navigation
     // ──────────────────────────────────────────────
 
+    handleRowKeydown(event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            this.navigateToProvider(event);
+        }
+    }
+
     navigateToProvider(event) {
         const providerId = event.currentTarget.dataset.id;
         this[NavigationMixin.Navigate]({

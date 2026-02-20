@@ -150,6 +150,7 @@
                                     class="providerDirectory__tableRow"
                                     data-id={provider.id}
                                     onclick={navigateToProvider}
+                                    onkeydown={handleRowKeydown}
                                     role="button"
                                     tabindex="0"
                                     aria-label={provider.name}>
@@ -211,6 +212,7 @@
                                 <div class="providerDirectory__card slds-box slds-box_small"
                                      data-id={provider.id}
                                      onclick={navigateToProvider}
+                                     onkeydown={handleRowKeydown}
                                      role="button"
                                      tabindex="0"
                                      aria-label={provider.name}>
