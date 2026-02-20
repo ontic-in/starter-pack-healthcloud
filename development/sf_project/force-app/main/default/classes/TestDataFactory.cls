@@ -311,4 +311,36 @@ public class TestDataFactory {
         insert task;
         return task;
     }
+
+    // ── Internal Referral factories (US-1.3.2) ──
+
+    /**
+     * @description Creates and inserts a ClinicalServiceRequest referral record.
+     * @param patientId The patient Account Id.
+     * @param referredToProviderId The receiving HealthcareProvider Id.
+     * @param requesterId The referring HealthcareProvider Id (optional).
+     * @param reason Referral reason text.
+     * @param priority Priority value (Routine, Urgent, ASAP, STAT).
+     * @param status Record status (Draft, Active, Completed, Revoked).
+     * @return The inserted ClinicalServiceRequest record.
+     */
+    public static ClinicalServiceRequest createClinicalServiceRequest(
+        Id patientId, Id referredToProviderId, Id requesterId,
+        String reason, String priority, String status
+    ) {
+        ClinicalServiceRequest csr = new ClinicalServiceRequest(
+            PatientId = patientId,
+            Referred_To_Provider__c = referredToProviderId,
+            Referral_Reason__c = reason,
+            Priority = priority,
+            Status = status,
+            Intent = 'order',
+            AuthoredOn = DateTime.now()
+        );
+        if (requesterId != null) {
+            csr.RequesterId = requesterId;
+        }
+        insert csr;
+        return csr;
+    }
 }

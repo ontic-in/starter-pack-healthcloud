@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomNotificationType xmlns="http://soap.sforce.com/2006/04/metadata">
+    <customNotifTypeName>Referral_Notification</customNotifTypeName>
+    <description>Notification sent to the receiving provider when a new internal referral is created.</description>
+    <desktop>true</desktop>
+    <masterLabel>Referral Notification</masterLabel>
+    <mobile>true</mobile>
+</CustomNotificationType>

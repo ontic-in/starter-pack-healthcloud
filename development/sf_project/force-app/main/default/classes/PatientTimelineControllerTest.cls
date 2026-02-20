@@ -37,6 +37,28 @@ private class PatientTimelineControllerTest {
             DurationInMinutes = 60
         );
         insert evt;
+
+        // Clinical: ClinicalServiceRequest (Referral)
+        Contact drTimeline = new Contact(FirstName = 'Timeline', LastName = 'Doctor', Email = 'timeline.doc@hospital.sg');
+        insert drTimeline;
+        HealthcareProvider timelineProvider = new HealthcareProvider(
+            PractitionerId = drTimeline.Id,
+            Name = 'Dr Timeline Doctor',
+            Is_Accepting_Patients__c = true,
+            IsActive = true
+        );
+        insert timelineProvider;
+
+        ClinicalServiceRequest csr = new ClinicalServiceRequest(
+            PatientId = patient.Id,
+            Referred_To_Provider__c = timelineProvider.Id,
+            Referral_Reason__c = 'Cardiology consult for chest pain',
+            Priority = 'Urgent',
+            Status = 'Active',
+            Intent = 'order',
+            AuthoredOn = DateTime.newInstance(2024, 12, 15, 9, 0, 0)
+        );
+        insert csr;
     }
 
     /**
@@ -203,5 +225,51 @@ private class PatientTimelineControllerTest {
 
         Assert.isNotNull(events, 'Events list should not be null');
         Assert.areEqual(0, events.size(), 'Invalid ID should return empty list');
+    }
+
+    /**
+     * @description Verifies ClinicalServiceRequest referrals appear in the clinical timeline.
+     */
+    @isTest
+    static void testGetTimelineEventsIncludesReferrals() {
+        Account patient = [SELECT Id FROM Account WHERE NRIC__c = 'S8800001T' LIMIT 1];
+
+        Test.startTest();
+        List<PatientTimelineController.TimelineEvent> events =
+            PatientTimelineController.getTimelineEvents(patient.Id, 'clinical');
+        Test.stopTest();
+
+        Boolean hasReferral = false;
+        for (PatientTimelineController.TimelineEvent evt : events) {
+            if (evt.objectType == 'ClinicalServiceRequest') {
+                hasReferral = true;
+                Assert.areEqual('clinical', evt.category, 'Referral should be clinical category');
+                Assert.isTrue(evt.title.contains('Referral'), 'Title should contain Referral prefix');
+                Assert.areEqual('standard:service_request', evt.iconName, 'Icon should be service_request');
+                Assert.isNotNull(evt.eventDate, 'Event date should be populated from AuthoredOn');
+            }
+        }
+        Assert.isTrue(hasReferral, 'Timeline should include ClinicalServiceRequest referral');
+    }
+
+    /**
+     * @description Verifies referral timeline event has correct provider and description.
+     */
+    @isTest
+    static void testGetTimelineEventsReferralDetails() {
+        Account patient = [SELECT Id FROM Account WHERE NRIC__c = 'S8800001T' LIMIT 1];
+
+        Test.startTest();
+        List<PatientTimelineController.TimelineEvent> events =
+            PatientTimelineController.getTimelineEvents(patient.Id, 'all');
+        Test.stopTest();
+
+        for (PatientTimelineController.TimelineEvent evt : events) {
+            if (evt.objectType == 'ClinicalServiceRequest') {
+                Assert.areEqual('Active', evt.status, 'Status should match');
+                Assert.areEqual('Cardiology consult for chest pain', evt.description, 'Description should be referral reason');
+                Assert.areEqual('Dr Timeline Doctor', evt.provider, 'Provider should be referred-to provider name');
+            }
+        }
     }
 }

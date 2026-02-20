@@ -1,0 +1,288 @@
+<template>
+    <lightning-card title="Internal Referral" icon-name="standard:service_request">
+
+        <!-- Progress Indicator -->
+        <div class="slds-p-horizontal_medium slds-p-top_small">
+            <lightning-progress-indicator current-step={currentStepValue} type="base" variant="base">
+                <template for:each={progressSteps} for:item="step">
+                    <lightning-progress-step key={step.value} label={step.label} value={step.value}>
+                    </lightning-progress-step>
+                </template>
+            </lightning-progress-indicator>
+        </div>
+
+        <div class="slds-p-around_medium">
+
+            <!-- Step 1: Patient Overview -->
+            <template lwc:if={isStepPatient}>
+                <template lwc:if={isLoadingPatient}>
+                    <lightning-spinner alternative-text="Loading patient data" size="medium"></lightning-spinner>
+                </template>
+
+                <template lwc:elseif={patientError}>
+                    <div class="referralWizard__error slds-box slds-theme_error">
+                        <p>{patientError}</p>
+                    </div>
+                </template>
+
+                <template lwc:elseif={patientContext}>
+                    <h2 class="slds-text-heading_small slds-m-bottom_small">Patient Information</h2>
+                    <div class="referralWizard__patientInfo slds-grid slds-wrap slds-gutters_small">
+                        <div class="slds-col slds-size_1-of-2 slds-m-bottom_x-small">
+                            <span class="slds-text-body_small slds-text-color_weak">Name</span>
+                            <p class="slds-text-body_regular">{patientFullName}</p>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-m-bottom_x-small">
+                            <span class="slds-text-body_small slds-text-color_weak">Date of Birth</span>
+                            <p class="slds-text-body_regular">
+                                <lightning-formatted-date-time value={patientDOB}></lightning-formatted-date-time>
+                            </p>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-m-bottom_x-small">
+                            <span class="slds-text-body_small slds-text-color_weak">NRIC</span>
+                            <p class="slds-text-body_regular">{patientNRIC}</p>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-m-bottom_x-small">
+                            <span class="slds-text-body_small slds-text-color_weak">Email</span>
+                            <p class="slds-text-body_regular">{patientEmail}</p>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-m-bottom_x-small">
+                            <span class="slds-text-body_small slds-text-color_weak">Phone</span>
+                            <p class="slds-text-body_regular">{patientPhone}</p>
+                        </div>
+                    </div>
+
+                    <!-- Active Conditions -->
+                    <h2 class="slds-text-heading_small slds-m-top_medium slds-m-bottom_x-small">Active Conditions</h2>
+                    <template lwc:if={hasConditions}>
+                        <ul class="slds-list_dotted">
+                            <template for:each={conditionsList} for:item="condition">
+                                <li key={condition.id}>
+                                    <strong>{condition.name}</strong>
+                                    <template lwc:if={condition.severity}>
+                                        &mdash; {condition.severity}
+                                    </template>
+                                </li>
+                            </template>
+                        </ul>
+                    </template>
+                    <template lwc:else>
+                        <p class="slds-text-body_small slds-text-color_weak">No active conditions on record</p>
+                    </template>
+
+                    <!-- Active Medications -->
+                    <h2 class="slds-text-heading_small slds-m-top_medium slds-m-bottom_x-small">Active Medications</h2>
+                    <template lwc:if={hasMedications}>
+                        <ul class="slds-list_dotted">
+                            <template for:each={medicationsList} for:item="med">
+                                <li key={med.id}>{med.name}</li>
+                            </template>
+                        </ul>
+                    </template>
+                    <template lwc:else>
+                        <p class="slds-text-body_small slds-text-color_weak">No active medications on record</p>
+                    </template>
+
+                    <!-- Known Allergies -->
+                    <h2 class="slds-text-heading_small slds-m-top_medium slds-m-bottom_x-small">Known Allergies</h2>
+                    <template lwc:if={hasAllergies}>
+                        <ul class="slds-list_dotted">
+                            <template for:each={allergiesList} for:item="allergy">
+                                <li key={allergy.id}>
+                                    <strong>{allergy.name}</strong>
+                                    <template lwc:if={allergy.severity}>
+                                        &mdash; {allergy.severity}
+                                    </template>
+                                </li>
+                            </template>
+                        </ul>
+                    </template>
+                    <template lwc:else>
+                        <p class="slds-text-body_small slds-text-color_weak">No known allergies on record</p>
+                    </template>
+                </template>
+            </template>
+
+            <!-- Step 2: Provider Selection -->
+            <template lwc:if={isStepProvider}>
+                <h2 class="slds-text-heading_small slds-m-bottom_small">Select Receiving Provider</h2>
+
+                <div class="referralWizard__providerSearch slds-grid slds-gutters_small slds-m-bottom_small">
+                    <div class="slds-col slds-size_2-of-3">
+                        <lightning-input
+                            type="search"
+                            label="Search Providers"
+                            placeholder="Search by name..."
+                            value={providerSearchTerm}
+                            onchange={handleProviderSearch}>
+                        </lightning-input>
+                    </div>
+                    <div class="slds-col slds-size_1-of-3">
+                        <lightning-combobox
+                            label="Specialty"
+                            value={selectedSpecialty}
+                            options={specialtyOptions}
+                            onchange={handleSpecialtyFilter}>
+                        </lightning-combobox>
+                    </div>
+                </div>
+
+                <template lwc:if={isLoadingProviders}>
+                    <lightning-spinner alternative-text="Loading providers" size="small"></lightning-spinner>
+                </template>
+
+                <template lwc:elseif={hasProviders}>
+                    <div class="referralWizard__providerList">
+                        <lightning-layout multiple-rows>
+                            <template for:each={transformedProviders} for:item="provider">
+                                <lightning-layout-item key={provider.id} size="12" medium-device-size="6" padding="around-small">
+                                    <div class={provider.cardClass}
+                                         data-id={provider.id}
+                                         onclick={handleProviderSelect}
+                                         onkeydown={handleProviderKeydown}
+                                         role="button"
+                                         tabindex="0"
+                                         aria-pressed={provider.isSelected}
+                                         aria-label={provider.practitionerName}>
+                                        <div class="referralWizard__providerCardHeader">
+                                            <h3 class="slds-text-heading_small slds-truncate">{provider.practitionerName}</h3>
+                                            <span class={provider.acceptingClass}>{provider.acceptingLabel}</span>
+                                        </div>
+                                        <div class="referralWizard__providerCardBody slds-m-top_xx-small">
+                                            <p class="slds-text-body_small">
+                                                <lightning-icon icon-name="utility:bookmark" size="xx-small" class="slds-m-right_xx-small"></lightning-icon>
+                                                {provider.specialtyDisplay}
+                                            </p>
+                                            <p class="slds-text-body_small slds-m-top_xx-small">
+                                                <lightning-icon icon-name="utility:location" size="xx-small" class="slds-m-right_xx-small"></lightning-icon>
+                                                {provider.facilityDisplay}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </lightning-layout-item>
+                            </template>
+                        </lightning-layout>
+                    </div>
+                </template>
+
+                <template lwc:else>
+                    <div class="referralWizard__empty slds-align_absolute-center slds-p-vertical_large">
+                        <p class="slds-text-body_small slds-text-color_weak">No providers found. Try adjusting your search.</p>
+                    </div>
+                </template>
+            </template>
+
+            <!-- Step 3: Referral Details -->
+            <template lwc:if={isStepDetails}>
+                <h2 class="slds-text-heading_small slds-m-bottom_small">Referral Details</h2>
+
+                <lightning-combobox
+                    label="Priority / Urgency"
+                    value={priority}
+                    options={priorityOptions}
+                    onchange={handlePriorityChange}
+                    class="slds-m-bottom_small">
+                </lightning-combobox>
+
+                <lightning-input
+                    label="Specialty Requested"
+                    value={specialtyRequested}
+                    onchange={handleSpecialtyRequestedChange}
+                    class="slds-m-bottom_small">
+                </lightning-input>
+
+                <lightning-textarea
+                    label="Referral Reason"
+                    value={referralReason}
+                    onchange={handleReasonChange}
+                    required
+                    max-length="32768"
+                    placeholder="Describe the clinical reason for this referral..."
+                    class="slds-m-bottom_small">
+                </lightning-textarea>
+
+                <lightning-textarea
+                    label="Additional Notes"
+                    value={referralNotes}
+                    onchange={handleNotesChange}
+                    max-length="32768"
+                    placeholder="Any additional clinical notes for the receiving provider..."
+                    class="slds-m-bottom_small">
+                </lightning-textarea>
+            </template>
+
+            <!-- Step 4: Review & Submit -->
+            <template lwc:if={isStepReview}>
+                <h2 class="slds-text-heading_small slds-m-bottom_small">Review Referral</h2>
+
+                <div class="referralWizard__reviewSection slds-box slds-m-bottom_small">
+                    <h3 class="slds-text-title_caps slds-m-bottom_x-small">Patient</h3>
+                    <p>{reviewPatientName}</p>
+                </div>
+
+                <div class="referralWizard__reviewSection slds-box slds-m-bottom_small">
+                    <h3 class="slds-text-title_caps slds-m-bottom_x-small">Referred To</h3>
+                    <p><strong>{reviewProviderName}</strong></p>
+                    <template lwc:if={reviewProviderSpecialty}>
+                        <p class="slds-text-body_small slds-text-color_weak">{reviewProviderSpecialty}</p>
+                    </template>
+                </div>
+
+                <div class="referralWizard__reviewSection slds-box slds-m-bottom_small">
+                    <h3 class="slds-text-title_caps slds-m-bottom_x-small">Details</h3>
+                    <div class="slds-grid slds-wrap slds-gutters_small">
+                        <div class="slds-col slds-size_1-of-2 slds-m-bottom_x-small">
+                            <span class="slds-text-body_small slds-text-color_weak">Priority</span>
+                            <p>{reviewPriority}</p>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2 slds-m-bottom_x-small">
+                            <span class="slds-text-body_small slds-text-color_weak">Specialty</span>
+                            <p>{reviewSpecialty}</p>
+                        </div>
+                    </div>
+                    <div class="slds-m-top_x-small">
+                        <span class="slds-text-body_small slds-text-color_weak">Reason</span>
+                        <p>{reviewReason}</p>
+                    </div>
+                    <template lwc:if={referralNotes}>
+                        <div class="slds-m-top_x-small">
+                            <span class="slds-text-body_small slds-text-color_weak">Notes</span>
+                            <p>{reviewNotes}</p>
+                        </div>
+                    </template>
+                </div>
+            </template>
+        </div>
+
+        <!-- Navigation Buttons -->
+        <div slot="footer" class="slds-grid slds-grid_align-spread">
+            <div>
+                <template lwc:if={showBackButton}>
+                    <lightning-button
+                        label="Back"
+                        variant="neutral"
+                        onclick={handleBack}>
+                    </lightning-button>
+                </template>
+            </div>
+            <div>
+                <template lwc:if={showNextButton}>
+                    <lightning-button
+                        label="Next"
+                        variant="brand"
+                        onclick={handleNext}
+                        disabled={isNextDisabled}>
+                    </lightning-button>
+                </template>
+                <template lwc:if={showSubmitButton}>
+                    <lightning-button
+                        label="Submit Referral"
+                        variant="brand"
+                        onclick={handleSubmit}
+                        disabled={isSubmitting}>
+                    </lightning-button>
+                </template>
+            </div>
+        </div>
+    </lightning-card>
+</template>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Referred_To_Provider__c</fullName>
+    <label>Referred To Provider</label>
+    <type>Lookup</type>
+    <referenceTo>HealthcareProvider</referenceTo>
+    <relationshipName>ReferredClinicalServiceRequests</relationshipName>
+    <relationshipLabel>Referred Clinical Service Requests</relationshipLabel>
+    <required>false</required>
+    <description>The healthcare provider receiving this referral. Indicates which provider the patient is being referred to.</description>
+    <inlineHelpText>Select the provider who will receive this referral</inlineHelpText>
+    <deleteConstraint>SetNull</deleteConstraint>
+</CustomField>

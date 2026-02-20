@@ -59,6 +59,7 @@ public with sharing class PatientTimelineController {
             events.addAll(getAllergyIntolerances(accountId));
             events.addAll(getCareObservations(accountId));
             events.addAll(getCarePlans(accountId));
+            events.addAll(getClinicalServiceRequests(accountId));
         }
 
         if (filter == FILTER_ALL || filter == CATEGORY_ADMINISTRATIVE) {
@@ -300,6 +301,32 @@ public with sharing class PatientTimelineController {
             }
         }
         return contactIds;
+    }
+
+    private static List<TimelineEvent> getClinicalServiceRequests(Id accountId) {
+        List<TimelineEvent> events = new List<TimelineEvent>();
+        for (ClinicalServiceRequest csr : [
+            SELECT Id, Name, Status, Priority, AuthoredOn, Referral_Reason__c,
+                   Referred_To_Provider__r.Name, Requester.Name
+            FROM ClinicalServiceRequest
+            WHERE PatientId = :accountId
+            WITH SECURITY_ENFORCED
+            ORDER BY AuthoredOn DESC
+            LIMIT :QUERY_LIMIT
+        ]) {
+            TimelineEvent te = new TimelineEvent();
+            te.recordId = csr.Id;
+            te.objectType = 'ClinicalServiceRequest';
+            te.category = CATEGORY_CLINICAL;
+            te.title = 'Referral: ' + (csr.Name != null ? csr.Name : 'Service Request');
+            te.description = csr.Referral_Reason__c;
+            te.eventDate = csr.AuthoredOn;
+            te.status = csr.Status;
+            te.provider = csr.Referred_To_Provider__r != null ? csr.Referred_To_Provider__r.Name : null;
+            te.iconName = 'standard:service_request';
+            events.add(te);
+        }
+        return events;
     }
 
     private static List<TimelineEvent> getCases(Id accountId) {

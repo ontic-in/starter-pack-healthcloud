@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Referral_Notes__c</fullName>
+    <label>Referral Notes</label>
+    <type>LongTextArea</type>
+    <length>32768</length>
+    <visibleLines>5</visibleLines>
+    <required>false</required>
+    <description>Additional clinical notes or context for the referral. Provides supplementary information for the receiving provider.</description>
+    <inlineHelpText>Any additional notes or clinical context for the receiving provider</inlineHelpText>
+</CustomField>
