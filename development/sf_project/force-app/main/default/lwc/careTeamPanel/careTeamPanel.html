@@ -120,14 +120,14 @@
 
     <!-- ── Add Member Modal ── -->
     <template lwc:if={showAddModal}>
-        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+        <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="add-modal-title" class="slds-modal slds-fade-in-open">
             <div class="slds-modal__container">
                 <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" onclick={handleCloseAddModal}>
                     <lightning-icon icon-name="utility:close" size="small" variant="inverse"></lightning-icon>
                     <span class="slds-assistive-text">Close</span>
                 </button>
                 <div class="slds-modal__header">
-                    <h2 class="slds-modal__title">Add Care Team Member</h2>
+                    <h2 id="add-modal-title" class="slds-modal__title">Add Care Team Member</h2>
                 </div>
                 <div class="slds-modal__content slds-p-around_medium">
                     <!-- Provider Search -->
@@ -243,14 +243,14 @@
 
     <!-- ── Edit Member Modal ── -->
     <template lwc:if={showEditModal}>
-        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+        <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="edit-modal-title" class="slds-modal slds-fade-in-open">
             <div class="slds-modal__container">
                 <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" onclick={handleCloseEditModal}>
                     <lightning-icon icon-name="utility:close" size="small" variant="inverse"></lightning-icon>
                     <span class="slds-assistive-text">Close</span>
                 </button>
                 <div class="slds-modal__header">
-                    <h2 class="slds-modal__title">Edit: {editMemberProviderName}</h2>
+                    <h2 id="edit-modal-title" class="slds-modal__title">Edit: {editMemberProviderName}</h2>
                 </div>
                 <div class="slds-modal__content slds-p-around_medium">
                     <!-- Role -->
@@ -310,14 +310,14 @@
 
     <!-- ── Remove Confirmation Modal ── -->
     <template lwc:if={showRemoveConfirm}>
-        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open slds-modal_small">
+        <section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="remove-modal-title" class="slds-modal slds-fade-in-open slds-modal_small">
             <div class="slds-modal__container">
                 <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" onclick={handleCloseRemoveConfirm}>
                     <lightning-icon icon-name="utility:close" size="small" variant="inverse"></lightning-icon>
                     <span class="slds-assistive-text">Close</span>
                 </button>
                 <div class="slds-modal__header">
-                    <h2 class="slds-modal__title">Remove Team Member</h2>
+                    <h2 id="remove-modal-title" class="slds-modal__title">Remove Team Member</h2>
                 </div>
                 <div class="slds-modal__content slds-p-around_medium">
                     <p>

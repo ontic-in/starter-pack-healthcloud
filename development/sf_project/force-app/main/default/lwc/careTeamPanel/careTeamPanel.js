@@ -1,5 +1,6 @@
 import { LightningElement, api, wire } from 'lwc';
 import { refreshApex } from '@salesforce/apex';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getCareTeamForPatient from '@salesforce/apex/CareTeamController.getCareTeamForPatient';
 import addTeamMember from '@salesforce/apex/CareTeamController.addTeamMember';
 import updateTeamMember from '@salesforce/apex/CareTeamController.updateTeamMember';
@@ -30,6 +31,12 @@ const ROLE_ICONS = {
     Pharmacist: 'standard:medicine'
 };
 
+const ROLE_PRIMARY_PHYSICIAN = 'Primary_Physician';
+const STATUS_ACTIVE = 'Active';
+const DEFAULT_NOTIFICATION_PREF = 'All';
+const MIN_SEARCH_LENGTH = 2;
+const SEARCH_DELAY_MS = 300;
+
 export default class CareTeamPanel extends LightningElement {
     @api recordId;
 
@@ -53,19 +60,22 @@ export default class CareTeamPanel extends LightningElement {
     selectedProvider = null;
     newMemberRole = '';
     newMemberIsPrimary = false;
-    newMemberNotifPref = 'All';
+    newMemberNotifPref = DEFAULT_NOTIFICATION_PREF;
     isSaving = false;
 
     // Edit member form
     editMemberId = null;
     editMemberRole = '';
     editMemberIsPrimary = false;
-    editMemberNotifPref = 'All';
+    editMemberNotifPref = DEFAULT_NOTIFICATION_PREF;
     editMemberProviderName = '';
 
     // Remove member
     removeMemberId = null;
     removeMemberName = '';
+
+    // Search debounce
+    _searchTimeout;
 
     // Options
     roleOptions = ROLE_OPTIONS;
@@ -176,7 +186,7 @@ export default class CareTeamPanel extends LightningElement {
         this.editMemberId = member.memberId;
         this.editMemberRole = member.role;
         this.editMemberIsPrimary = member.isPrimary;
-        this.editMemberNotifPref = member.notificationPref || 'All';
+        this.editMemberNotifPref = member.notificationPref || DEFAULT_NOTIFICATION_PREF;
         this.editMemberProviderName = member.providerName;
         this.showEditModal = true;
     }
@@ -211,12 +221,17 @@ export default class CareTeamPanel extends LightningElement {
         this.providerSearchTerm = term;
         this.selectedProvider = null;
 
-        if (!term || term.length < 2) {
+        clearTimeout(this._searchTimeout); // eslint-disable-line @lwc/lwc/no-async-operation
+
+        if (!term || term.length < MIN_SEARCH_LENGTH) {
             this.providerSearchResults = [];
             return;
         }
 
-        this.executeSearch(term);
+        // eslint-disable-next-line @lwc/lwc/no-async-operation
+        this._searchTimeout = setTimeout(() => {
+            this.executeSearch(term);
+        }, SEARCH_DELAY_MS);
     }
 
     async executeSearch(term) {
@@ -256,7 +271,7 @@ export default class CareTeamPanel extends LightningElement {
 
     handleNewRoleChange(event) {
         this.newMemberRole = event.detail.value;
-        this.newMemberIsPrimary = event.detail.value === 'Primary_Physician';
+        this.newMemberIsPrimary = event.detail.value === ROLE_PRIMARY_PHYSICIAN;
     }
 
     handleNewPrimaryChange(event) {
@@ -269,7 +284,7 @@ export default class CareTeamPanel extends LightningElement {
 
     handleEditRoleChange(event) {
         this.editMemberRole = event.detail.value;
-        this.editMemberIsPrimary = event.detail.value === 'Primary_Physician';
+        this.editMemberIsPrimary = event.detail.value === ROLE_PRIMARY_PHYSICIAN;
     }
 
     handleEditPrimaryChange(event) {
@@ -312,7 +327,7 @@ export default class CareTeamPanel extends LightningElement {
             await updateTeamMember({
                 memberId: this.editMemberId,
                 role: this.editMemberRole,
-                status: 'Active',
+                status: STATUS_ACTIVE,
                 isPrimary: this.editMemberIsPrimary,
                 notificationPref: this.editMemberNotifPref
             });
@@ -352,7 +367,7 @@ export default class CareTeamPanel extends LightningElement {
 
     getNotifLabel(pref) {
         const option = NOTIFICATION_OPTIONS.find((o) => o.value === pref);
-        return option ? option.label : pref || 'All';
+        return option ? option.label : pref || DEFAULT_NOTIFICATION_PREF;
     }
 
     resetAddForm() {
@@ -361,7 +376,7 @@ export default class CareTeamPanel extends LightningElement {
         this.selectedProvider = null;
         this.newMemberRole = '';
         this.newMemberIsPrimary = false;
-        this.newMemberNotifPref = 'All';
+        this.newMemberNotifPref = DEFAULT_NOTIFICATION_PREF;
         this.isSearching = false;
     }
 
@@ -369,16 +384,12 @@ export default class CareTeamPanel extends LightningElement {
         this.editMemberId = null;
         this.editMemberRole = '';
         this.editMemberIsPrimary = false;
-        this.editMemberNotifPref = 'All';
+        this.editMemberNotifPref = DEFAULT_NOTIFICATION_PREF;
         this.editMemberProviderName = '';
     }
 
     showToast(title, message, variant) {
-        this.dispatchEvent(new CustomEvent('showtoast', {
-            detail: { title, message, variant },
-            bubbles: true,
-            composed: true
-        }));
+        this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
     }
 
     reduceErrors(errors) {

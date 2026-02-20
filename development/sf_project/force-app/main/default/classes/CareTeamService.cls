@@ -7,6 +7,18 @@ public with sharing class CareTeamService {
 
     private static final Integer QUERY_LIMIT = 50;
     private static final Integer SEARCH_LIMIT = 20;
+    private static final Integer MIN_SEARCH_LENGTH = 2;
+    private static final String STATUS_ACTIVE = 'Active';
+    private static final String STATUS_INACTIVE = 'Inactive';
+    private static final String DEFAULT_NOTIFICATION_PREF = 'All';
+    private static final String DEFAULT_CARE_TEAM_NAME = 'Care Team';
+    private static final String NOTIF_TYPE_CARE_TEAM = 'Care_Team_Assignment';
+    private static final String NOTIF_ACTION_ADDED = 'ADDED';
+    private static final String NOTIF_ACTION_REMOVED = 'REMOVED';
+    private static final String ERR_MEMBER_NOT_FOUND = 'Care team member not found.';
+    private static final String ERR_PRIMARY_EXISTS =
+        'This care team already has a primary physician. ' +
+        'Please remove the existing primary before assigning a new one.';
 
     // ── Wrapper classes ──
 
@@ -52,7 +64,7 @@ public with sharing class CareTeamService {
             SELECT Id, Name, Status
             FROM CareTeam
             WHERE PatientId = :patientAccountId
-            AND Status = 'Active'
+            AND Status = :STATUS_ACTIVE
             WITH SECURITY_ENFORCED
             LIMIT 1
         ];
@@ -70,7 +82,7 @@ public with sharing class CareTeamService {
                    PeriodStartDate, PeriodEndDate
             FROM CareTeamMember
             WHERE CareTeamId = :detail.careTeam.Id
-            AND Status = 'Active'
+            AND Status = :STATUS_ACTIVE
             WITH SECURITY_ENFORCED
             ORDER BY Is_Primary__c DESC, Role ASC
             LIMIT :QUERY_LIMIT
@@ -124,9 +136,9 @@ public with sharing class CareTeamService {
             CareTeamId = team.Id,
             AccountId = providerAccountId,
             Role = role,
-            Status = 'Active',
+            Status = STATUS_ACTIVE,
             Is_Primary__c = isPrimary,
-            Notification_Pref__c = notificationPref != null ? notificationPref : 'All',
+            Notification_Pref__c = notificationPref != null ? notificationPref : DEFAULT_NOTIFICATION_PREF,
             PeriodStartDate = Date.today()
         );
 
@@ -136,7 +148,7 @@ public with sharing class CareTeamService {
         insert decision.getRecords();
         CareTeamMember inserted = (CareTeamMember) decision.getRecords()[0];
 
-        sendAssignmentNotification(providerAccountId, patientAccountId, role, 'ADDED');
+        sendAssignmentNotification(providerAccountId, patientAccountId, role, NOTIF_ACTION_ADDED);
 
         return inserted;
     }
@@ -167,7 +179,9 @@ public with sharing class CareTeamService {
         ];
 
         if (existing.isEmpty()) {
-            throw new AuraHandledException('Care team member not found.');
+            AuraHandledException ex = new AuraHandledException(ERR_MEMBER_NOT_FOUND);
+            ex.setMessage(ERR_MEMBER_NOT_FOUND);
+            throw ex;
         }
 
         CareTeamMember member = existing[0];
@@ -202,14 +216,16 @@ public with sharing class CareTeamService {
         ];
 
         if (existing.isEmpty()) {
-            throw new AuraHandledException('Care team member not found.');
+            AuraHandledException ex = new AuraHandledException(ERR_MEMBER_NOT_FOUND);
+            ex.setMessage(ERR_MEMBER_NOT_FOUND);
+            throw ex;
         }
 
         CareTeamMember member = existing[0];
         Id providerAccountId = member.AccountId;
         String role = member.Role;
 
-        member.Status = 'Inactive';
+        member.Status = STATUS_INACTIVE;
         member.PeriodEndDate = Date.today();
 
         SObjectAccessDecision decision = Security.stripInaccessible(
@@ -225,7 +241,7 @@ public with sharing class CareTeamService {
             LIMIT 1
         ];
         if (!teams.isEmpty()) {
-            sendAssignmentNotification(providerAccountId, teams[0].PatientId, role, 'REMOVED');
+            sendAssignmentNotification(providerAccountId, teams[0].PatientId, role, NOTIF_ACTION_REMOVED);
         }
     }
 
@@ -237,7 +253,7 @@ public with sharing class CareTeamService {
     public static List<ProviderSearchResult> searchProviders(String searchTerm) {
         List<ProviderSearchResult> results = new List<ProviderSearchResult>();
 
-        if (String.isBlank(searchTerm) || searchTerm.length() < 2) {
+        if (String.isBlank(searchTerm) || searchTerm.length() < MIN_SEARCH_LENGTH) {
             return results;
         }
 
@@ -267,7 +283,8 @@ public with sharing class CareTeamService {
             SELECT AccountId, COUNT(Id) cnt
             FROM CareTeamMember
             WHERE AccountId IN :providerIds
-            AND Status = 'Active'
+            AND Status = :STATUS_ACTIVE
+            WITH SECURITY_ENFORCED
             GROUP BY AccountId
         ]) {
             patientCounts.put((Id) ar.get('AccountId'), (Integer) ar.get('cnt'));
@@ -293,7 +310,7 @@ public with sharing class CareTeamService {
             SELECT Id, Name, Status
             FROM CareTeam
             WHERE PatientId = :patientAccountId
-            AND Status = 'Active'
+            AND Status = :STATUS_ACTIVE
             WITH SECURITY_ENFORCED
             LIMIT 1
         ];
@@ -304,8 +321,8 @@ public with sharing class CareTeamService {
 
         CareTeam team = new CareTeam(
             PatientId = patientAccountId,
-            Name = 'Care Team',
-            Status = 'Active'
+            Name = DEFAULT_CARE_TEAM_NAME,
+            Status = STATUS_ACTIVE
         );
 
         SObjectAccessDecision decision = Security.stripInaccessible(
@@ -317,11 +334,6 @@ public with sharing class CareTeamService {
 
     @TestVisible
     private static void validatePrimaryPhysicianRule(Id careTeamId, Id excludeMemberId) {
-        String query = 'SELECT COUNT() FROM CareTeamMember ' +
-            'WHERE CareTeamId = :careTeamId ' +
-            'AND Is_Primary__c = true ' +
-            'AND Status = \'Active\'';
-
         Integer existingCount;
         if (excludeMemberId != null) {
             existingCount = [
@@ -329,7 +341,7 @@ public with sharing class CareTeamService {
                 FROM CareTeamMember
                 WHERE CareTeamId = :careTeamId
                 AND Is_Primary__c = true
-                AND Status = 'Active'
+                AND Status = :STATUS_ACTIVE
                 AND Id != :excludeMemberId
             ];
         } else {
@@ -338,15 +350,14 @@ public with sharing class CareTeamService {
                 FROM CareTeamMember
                 WHERE CareTeamId = :careTeamId
                 AND Is_Primary__c = true
-                AND Status = 'Active'
+                AND Status = :STATUS_ACTIVE
             ];
         }
 
         if (existingCount > 0) {
-            throw new AuraHandledException(
-                'This care team already has a primary physician. ' +
-                'Please remove the existing primary before assigning a new one.'
-            );
+            AuraHandledException ex = new AuraHandledException(ERR_PRIMARY_EXISTS);
+            ex.setMessage(ERR_PRIMARY_EXISTS);
+            throw ex;
         }
     }
 
@@ -369,7 +380,7 @@ public with sharing class CareTeamService {
             String title;
             String body;
 
-            if (notificationType == 'ADDED') {
+            if (notificationType == NOTIF_ACTION_ADDED) {
                 title = 'New Care Team Assignment';
                 body = 'You have been added to the care team for '
                     + patientName + ' as ' + role.replace('_', ' ') + '.';
@@ -381,7 +392,8 @@ public with sharing class CareTeamService {
 
             List<CustomNotificationType> notifTypes = [
                 SELECT Id FROM CustomNotificationType
-                WHERE DeveloperName = 'Care_Team_Assignment'
+                WHERE DeveloperName = :NOTIF_TYPE_CARE_TEAM
+                WITH SECURITY_ENFORCED
                 LIMIT 1
             ];
 
@@ -394,6 +406,7 @@ public with sharing class CareTeamService {
                 SELECT Id FROM User
                 WHERE AccountId = :providerAccountId
                 AND IsActive = true
+                WITH SECURITY_ENFORCED
                 LIMIT 1
             ];
             if (users.isEmpty()) {
