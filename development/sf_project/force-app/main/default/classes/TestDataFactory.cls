@@ -311,4 +311,111 @@ public class TestDataFactory {
         insert task;
         return task;
     }
+
+    // ── Provider Directory factories (US-1.3.1) ──
+
+    /**
+     * @description Creates and inserts a HealthcareProvider linked to a practitioner Contact.
+     * @param practitionerId The Contact Id for the practitioner.
+     * @param name Provider name.
+     * @param mcrNumber MCR registration number.
+     * @param languages Multi-select picklist value (semicolon-separated).
+     * @param patientLoad Current patient load count.
+     * @param accepting Whether the provider is accepting new patients.
+     * @return The inserted HealthcareProvider record.
+     */
+    public static HealthcareProvider createHealthcareProvider(
+        Id practitionerId, String name, String mcrNumber,
+        String languages, Integer patientLoad, Boolean accepting
+    ) {
+        HealthcareProvider provider = new HealthcareProvider(
+            PractitionerId = practitionerId,
+            Name = name,
+            MCR_Number__c = mcrNumber,
+            Languages__c = languages,
+            Current_Patient_Load__c = patientLoad,
+            Is_Accepting_Patients__c = accepting,
+            Next_Available_Slot__c = DateTime.now().addDays(3),
+            IsActive = true
+        );
+        insert provider;
+        return provider;
+    }
+
+    /**
+     * @description Creates and inserts a CareSpecialty record.
+     * @param name Specialty name.
+     * @param specialtyCode Specialty code value.
+     * @return The inserted CareSpecialty record.
+     */
+    public static CareSpecialty createCareSpecialty(String name, String specialtyCode) {
+        CareSpecialty specialty = new CareSpecialty(
+            Name = name,
+            SpecialtyCode = specialtyCode,
+            IsActive = true
+        );
+        insert specialty;
+        return specialty;
+    }
+
+    /**
+     * @description Creates and inserts a CareTaxonomy record.
+     * @param name Taxonomy name.
+     * @return The inserted CareTaxonomy record.
+     */
+    public static CareTaxonomy createCareTaxonomy(String name) {
+        CareTaxonomy taxonomy = new CareTaxonomy(
+            Name = name
+        );
+        insert taxonomy;
+        return taxonomy;
+    }
+
+    /**
+     * @description Creates and inserts a HealthcareProviderTaxonomy junction record.
+     * @param healthcareProviderId The HealthcareProvider Id.
+     * @param taxonomyId The CareTaxonomy Id.
+     * @return The inserted HealthcareProviderTaxonomy record.
+     */
+    public static HealthcareProviderTaxonomy createProviderTaxonomy(
+        Id healthcareProviderId, Id taxonomyId
+    ) {
+        HealthcareProviderTaxonomy provTaxonomy = new HealthcareProviderTaxonomy(
+            HealthcareProviderId = healthcareProviderId,
+            TaxonomyId = taxonomyId
+        );
+        insert provTaxonomy;
+        return provTaxonomy;
+    }
+
+    /**
+     * @description Creates and inserts a basic Account for use as a facility.
+     * @param name Facility name.
+     * @return The inserted Account record.
+     */
+    public static Account createFacilityAccount(String name) {
+        Account facility = new Account(
+            Name = name
+        );
+        insert facility;
+        return facility;
+    }
+
+    /**
+     * @description Creates and inserts a HealthcarePractitionerFacility junction record.
+     * @param practitionerId The practitioner Contact Id.
+     * @param accountId The facility Account Id.
+     * @return The inserted HealthcarePractitionerFacility record.
+     */
+    public static HealthcarePractitionerFacility createPractitionerFacility(
+        Id practitionerId, Id accountId
+    ) {
+        HealthcarePractitionerFacility pracFacility = new HealthcarePractitionerFacility(
+            PractitionerId = practitionerId,
+            AccountId = accountId,
+            IsActive = true
+        );
+        insert pracFacility;
+        return pracFacility;
+    }
 }

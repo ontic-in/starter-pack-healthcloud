@@ -1,0 +1,268 @@
+<template>
+    <lightning-card title="Provider Directory" icon-name="standard:service_resource">
+        <!-- Search Bar -->
+        <div class="providerDirectory__search slds-p-horizontal_medium slds-p-top_small">
+            <lightning-input
+                type="search"
+                label="Search Providers"
+                placeholder="Search by name or MCR number..."
+                value={searchTerm}
+                onchange={handleSearchInput}
+                variant="label-hidden"
+            ></lightning-input>
+        </div>
+
+        <!-- Filter Panel -->
+        <div class="providerDirectory__filters slds-p-horizontal_medium slds-p-top_small">
+            <lightning-layout multiple-rows>
+                <lightning-layout-item size="12" medium-device-size="3" padding="around-small">
+                    <lightning-dual-listbox
+                        label="Specialty"
+                        source-label="Available"
+                        selected-label="Selected"
+                        options={specialtyOptions}
+                        value={selectedSpecialties}
+                        onchange={handleSpecialtyChange}
+                        size="4"
+                    ></lightning-dual-listbox>
+                </lightning-layout-item>
+                <lightning-layout-item size="12" medium-device-size="3" padding="around-small">
+                    <lightning-dual-listbox
+                        label="Facility"
+                        source-label="Available"
+                        selected-label="Selected"
+                        options={facilityOptions}
+                        value={selectedFacilities}
+                        onchange={handleFacilityChange}
+                        size="4"
+                    ></lightning-dual-listbox>
+                </lightning-layout-item>
+                <lightning-layout-item size="12" medium-device-size="3" padding="around-small">
+                    <lightning-dual-listbox
+                        label="Language"
+                        source-label="Available"
+                        selected-label="Selected"
+                        options={languageOptions}
+                        value={selectedLanguages}
+                        onchange={handleLanguageChange}
+                        size="4"
+                    ></lightning-dual-listbox>
+                </lightning-layout-item>
+                <lightning-layout-item size="12" medium-device-size="3" padding="around-small">
+                    <div class="slds-p-top_large">
+                        <lightning-input
+                            type="checkbox"
+                            label="Accepting patients only"
+                            checked={acceptingPatientsOnly}
+                            onchange={handleAcceptingChange}
+                        ></lightning-input>
+                        <template lwc:if={hasActiveFilters}>
+                            <lightning-button
+                                label="Clear Filters"
+                                variant="base"
+                                onclick={handleClearFilters}
+                                class="slds-m-top_x-small"
+                            ></lightning-button>
+                        </template>
+                    </div>
+                </lightning-layout-item>
+            </lightning-layout>
+        </div>
+
+        <!-- Toolbar: Result Count + View Toggle -->
+        <div class="providerDirectory__toolbar slds-p-horizontal_medium slds-p-vertical_x-small">
+            <lightning-layout vertical-align="center">
+                <lightning-layout-item flexibility="auto">
+                    <span class="providerDirectory__resultCount slds-text-body_small">
+                        {resultCount}
+                    </span>
+                </lightning-layout-item>
+                <lightning-layout-item>
+                    <lightning-button-group>
+                        <lightning-button
+                            label="Table"
+                            data-view="table"
+                            onclick={handleViewToggle}
+                            class={tableViewClass}
+                            aria-label="Switch to table view"
+                        ></lightning-button>
+                        <lightning-button
+                            label="Cards"
+                            data-view="card"
+                            onclick={handleViewToggle}
+                            class={cardViewClass}
+                            aria-label="Switch to card view"
+                        ></lightning-button>
+                    </lightning-button-group>
+                </lightning-layout-item>
+            </lightning-layout>
+        </div>
+
+        <!-- Loading Spinner -->
+        <template lwc:if={isLoading}>
+            <div class="slds-is-relative slds-p-around_large">
+                <lightning-spinner alternative-text="Loading providers" size="medium"></lightning-spinner>
+            </div>
+        </template>
+
+        <!-- Error State -->
+        <template lwc:if={errorMessage}>
+            <div class="providerDirectory__error slds-p-around_medium">
+                <div class="slds-notify slds-notify_alert slds-alert_error" role="alert">
+                    <span class="slds-assistive-text">Error</span>
+                    <h2>{errorMessage}</h2>
+                </div>
+            </div>
+        </template>
+
+        <!-- Empty State -->
+        <template lwc:if={showEmptyState}>
+            <div class="providerDirectory__empty slds-p-around_large slds-text-align_center">
+                <lightning-icon icon-name="utility:search" size="large" class="slds-m-bottom_small"></lightning-icon>
+                <p class="slds-text-heading_small slds-m-top_small">{emptyStateMessage}</p>
+                <p class="slds-text-body_regular slds-m-top_x-small slds-text-color_weak">
+                    Try adjusting your search terms or filters.
+                </p>
+            </div>
+        </template>
+
+        <!-- Table View -->
+        <template lwc:if={isTableView}>
+            <template lwc:if={hasProviders}>
+                <div class="providerDirectory__table slds-p-horizontal_medium">
+                    <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_striped"
+                           aria-label="Provider Directory Results">
+                        <thead>
+                            <tr class="slds-line-height_reset">
+                                <th scope="col"><div class="slds-truncate" title="Provider Name">Name</div></th>
+                                <th scope="col"><div class="slds-truncate" title="MCR Number">MCR</div></th>
+                                <th scope="col"><div class="slds-truncate" title="Specialties">Specialties</div></th>
+                                <th scope="col"><div class="slds-truncate" title="Facilities">Facilities</div></th>
+                                <th scope="col"><div class="slds-truncate" title="Languages">Languages</div></th>
+                                <th scope="col"><div class="slds-truncate" title="Patient Load">Load</div></th>
+                                <th scope="col"><div class="slds-truncate" title="Next Available">Next Available</div></th>
+                                <th scope="col"><div class="slds-truncate" title="Status">Status</div></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={providers} for:item="provider">
+                                <tr key={provider.id}
+                                    class="providerDirectory__tableRow"
+                                    data-id={provider.id}
+                                    onclick={navigateToProvider}
+                                    onkeydown={handleRowKeydown}
+                                    role="button"
+                                    tabindex="0"
+                                    aria-label={provider.name}>
+                                    <td>
+                                        <div class="slds-truncate" title={provider.name}>
+                                            <strong>{provider.practitionerName}</strong>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="slds-truncate" title={provider.mcrNumber}>
+                                            {provider.mcrNumber}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="slds-truncate" title={provider.specialtyDisplay}>
+                                            {provider.specialtyDisplay}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="slds-truncate" title={provider.facilityDisplay}>
+                                            {provider.facilityDisplay}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="slds-truncate" title={provider.languagesDisplay}>
+                                            {provider.languagesDisplay}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class={provider.patientLoadClass}>
+                                            {provider.patientLoad}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="slds-truncate">
+                                            {provider.formattedNextAvailable}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class={provider.acceptingClass}>
+                                            {provider.acceptingLabel}
+                                        </span>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </template>
+        </template>
+
+        <!-- Card View -->
+        <template lwc:if={isCardView}>
+            <template lwc:if={hasProviders}>
+                <div class="providerDirectory__cards slds-p-horizontal_medium">
+                    <lightning-layout multiple-rows>
+                        <template for:each={providers} for:item="provider">
+                            <lightning-layout-item key={provider.id} size="12" medium-device-size="6" large-device-size="4" padding="around-small">
+                                <div class="providerDirectory__card slds-box slds-box_small"
+                                     data-id={provider.id}
+                                     onclick={navigateToProvider}
+                                     onkeydown={handleRowKeydown}
+                                     role="button"
+                                     tabindex="0"
+                                     aria-label={provider.name}>
+                                    <div class="providerDirectory__cardHeader">
+                                        <h3 class="slds-text-heading_small slds-truncate">{provider.practitionerName}</h3>
+                                        <span class={provider.acceptingClass}>{provider.acceptingLabel}</span>
+                                    </div>
+                                    <div class="providerDirectory__cardBody slds-m-top_x-small">
+                                        <p class="slds-text-body_small slds-text-color_weak">
+                                            MCR: {provider.mcrNumber}
+                                        </p>
+                                        <template lwc:if={provider.specialtyDisplay}>
+                                            <p class="slds-m-top_xx-small">
+                                                <lightning-icon icon-name="utility:bookmark" size="xx-small" class="slds-m-right_xx-small"></lightning-icon>
+                                                {provider.specialtyDisplay}
+                                            </p>
+                                        </template>
+                                        <template lwc:if={provider.facilityDisplay}>
+                                            <p class="slds-m-top_xx-small">
+                                                <lightning-icon icon-name="utility:location" size="xx-small" class="slds-m-right_xx-small"></lightning-icon>
+                                                {provider.facilityDisplay}
+                                            </p>
+                                        </template>
+                                        <template lwc:if={provider.languagesDisplay}>
+                                            <p class="slds-m-top_xx-small">
+                                                <lightning-icon icon-name="utility:world" size="xx-small" class="slds-m-right_xx-small"></lightning-icon>
+                                                {provider.languagesDisplay}
+                                            </p>
+                                        </template>
+                                    </div>
+                                    <div class="providerDirectory__cardFooter slds-m-top_small slds-border_top slds-p-top_x-small">
+                                        <lightning-layout>
+                                            <lightning-layout-item flexibility="auto">
+                                                <span class="slds-text-body_small">
+                                                    Patients: <span class={provider.patientLoadClass}>{provider.patientLoad}</span>
+                                                </span>
+                                            </lightning-layout-item>
+                                            <lightning-layout-item>
+                                                <span class="slds-text-body_small">
+                                                    Next: {provider.formattedNextAvailable}
+                                                </span>
+                                            </lightning-layout-item>
+                                        </lightning-layout>
+                                    </div>
+                                </div>
+                            </lightning-layout-item>
+                        </template>
+                    </lightning-layout>
+                </div>
+            </template>
+        </template>
+    </lightning-card>
+</template>

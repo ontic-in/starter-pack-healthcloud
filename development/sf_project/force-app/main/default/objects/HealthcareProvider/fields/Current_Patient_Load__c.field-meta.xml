@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Current_Patient_Load__c</fullName>
+    <label>Current Patient Load</label>
+    <type>Number</type>
+    <precision>3</precision>
+    <scale>0</scale>
+    <required>false</required>
+    <defaultValue>0</defaultValue>
+    <description>Current number of active patients assigned to this provider. Updated periodically, not real-time.</description>
+    <inlineHelpText>Number of active patients currently assigned to this provider</inlineHelpText>
+</CustomField>

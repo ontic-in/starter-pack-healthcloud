@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>Provider Directory Access</label>
+    <description>Provides read access to provider directory data for care coordinators and clinicians. Grants Read on HealthcareProvider, CareSpecialty, CareTaxonomy, and related junction objects for directory search and filtering (US-1.3.1).</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <license>Salesforce</license>
+
+    <!-- HealthcareProvider custom fields -->
+    <fieldPermissions>
+        <field>HealthcareProvider.MCR_Number__c</field>
+        <editable>false</editable>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>HealthcareProvider.Languages__c</field>
+        <editable>false</editable>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>HealthcareProvider.Current_Patient_Load__c</field>
+        <editable>false</editable>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>HealthcareProvider.Next_Available_Slot__c</field>
+        <editable>false</editable>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>HealthcareProvider.Is_Accepting_Patients__c</field>
+        <editable>false</editable>
+        <readable>true</readable>
+    </fieldPermissions>
+
+    <!-- Object Permissions: HealthcareProvider (read-only directory) -->
+    <objectPermissions>
+        <object>HealthcareProvider</object>
+        <allowCreate>false</allowCreate>
+        <allowDelete>false</allowDelete>
+        <allowEdit>false</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
+
+    <!-- Object Permissions: CareSpecialty (read-only) -->
+    <objectPermissions>
+        <object>CareSpecialty</object>
+        <allowCreate>false</allowCreate>
+        <allowDelete>false</allowDelete>
+        <allowEdit>false</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
+
+    <!-- Object Permissions: CareTaxonomy (read-only) -->
+    <objectPermissions>
+        <object>CareTaxonomy</object>
+        <allowCreate>false</allowCreate>
+        <allowDelete>false</allowDelete>
+        <allowEdit>false</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
+
+    <!-- Object Permissions: HealthcareProviderTaxonomy junction (read-only) -->
+    <objectPermissions>
+        <object>HealthcareProviderTaxonomy</object>
+        <allowCreate>false</allowCreate>
+        <allowDelete>false</allowDelete>
+        <allowEdit>false</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
+
+    <!-- Object Permissions: HealthcarePractitionerFacility junction (read-only) -->
+    <objectPermissions>
+        <object>HealthcarePractitionerFacility</object>
+        <allowCreate>false</allowCreate>
+        <allowDelete>false</allowDelete>
+        <allowEdit>false</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
+
+    <!-- Object Permissions: Account (read-only, for facility name display) -->
+    <objectPermissions>
+        <object>Account</object>
+        <allowCreate>false</allowCreate>
+        <allowDelete>false</allowDelete>
+        <allowEdit>false</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
+
+    <!-- Object Permissions: Contact (read-only, for practitioner details) -->
+    <objectPermissions>
+        <object>Contact</object>
+        <allowCreate>false</allowCreate>
+        <allowDelete>false</allowDelete>
+        <allowEdit>false</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
+
+    <!-- Apex Class Access -->
+    <classAccesses>
+        <apexClass>ProviderDirectoryController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>ProviderDirectoryService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+</PermissionSet>
