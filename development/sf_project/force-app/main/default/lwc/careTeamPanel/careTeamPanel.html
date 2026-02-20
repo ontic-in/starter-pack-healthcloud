@@ -232,7 +232,7 @@
                         label="Add Member"
                         variant="brand"
                         onclick={handleSaveNewMember}
-                        disabled={!canSaveNewMember}
+                        disabled={disableSaveNewMember}
                         class="slds-m-left_x-small"
                     ></lightning-button>
                 </div>
@@ -299,7 +299,7 @@
                         label="Save Changes"
                         variant="brand"
                         onclick={handleSaveEdit}
-                        disabled={!canSaveEdit}
+                        disabled={disableSaveEdit}
                         class="slds-m-left_x-small"
                     ></lightning-button>
                 </div>

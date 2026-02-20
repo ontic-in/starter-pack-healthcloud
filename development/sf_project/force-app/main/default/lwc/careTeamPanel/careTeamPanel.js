@@ -148,8 +148,16 @@ export default class CareTeamPanel extends LightningElement {
         return this.selectedProvider && this.newMemberRole && !this.isSaving;
     }
 
+    get disableSaveNewMember() {
+        return !this.canSaveNewMember;
+    }
+
     get canSaveEdit() {
         return this.editMemberRole && !this.isSaving;
+    }
+
+    get disableSaveEdit() {
+        return !this.canSaveEdit;
     }
 
     get hasPrimaryPhysician() {
