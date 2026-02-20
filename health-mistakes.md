@@ -615,9 +615,238 @@ for (ChildRelationship cr : Schema.SObjectType.CarePlanTemplate.getChildRelation
 - **API version alignment**: Finding #11 - check meta XMLs match project standard before committing.
 - **WITH SECURITY_ENFORCED on every query**: Finding #12 - no exceptions, make it automatic.
 
+---
+---
+
+# [US-1.2.3] Care Team Assignment
+
+**Ticket**: https://app.clickup.com/t/86d1yxwbu
+**Date**: 2026-02-20
+**Context**: Full implementation of Care Team Assignment feature (Apex + LWC + Permission Set) plus PR review fixes and org deployment attempt
+
+---
+
+## Mistake 22: LWC Template UnaryExpression Not Allowed
+
+**What happened**: Used `{!canSaveNewMember}` and `{!canSaveEdit}` in LWC template HTML to disable buttons. LWC templates do NOT allow the `!` (unary NOT) operator in template expressions. This is different from Aura components where `{!v.property}` is standard syntax.
+
+**Error**: `LWC1060: Template expression doesn't allow UnaryExpression` at line 235:25
+
+**Impact**: Medium - deployment to org failed on LWC compilation. Required a code fix and additional commit.
+
+**Fix**: Created getter properties in JS to invert the boolean:
+```javascript
+get disableSaveNewMember() {
+    return !this.canSaveNewMember;
+}
+get disableSaveEdit() {
+    return !this.canSaveEdit;
+}
+```
+Then used `disabled={disableSaveNewMember}` and `disabled={disableSaveEdit}` in the template.
+
+**Prevention**: LWC templates only support simple property references and ternary expressions. No unary operators (`!`), no method calls, no complex expressions. Always use getter properties for computed/inverted booleans. This is a fundamental LWC vs Aura difference.
+
+---
+
+## Mistake 23: Missing `WITH SECURITY_ENFORCED` on 3 SOQL Queries
+
+**What happened**: Initial implementation of `CareTeamService.cls` had 3 SOQL queries without `WITH SECURITY_ENFORCED`. Caught during PR review by architect-reviewer agent.
+
+**Impact**: Security vulnerability - FLS/CRUD checks bypassed. Caught before merge.
+
+**Fix**: Added `WITH SECURITY_ENFORCED` to all 3 queries, including aggregate queries.
+
+**Prevention**: This is the same mistake as US-1.1.4 Finding #12. Every SOQL query must include `WITH SECURITY_ENFORCED`. No exceptions. Should be a muscle memory pattern: write `SELECT ... FROM ... WITH SECURITY_ENFORCED WHERE ...`.
+
+**Repeat of**: US-1.1.4 Finding #12. Fourth occurrence across tickets.
+
+---
+
+## Mistake 24: AuraHandledException Incomplete Error Pattern
+
+**What happened**: Used `throw new AuraHandledException(message)` (constructor arg only). The error message does NOT propagate to the LWC client with just the constructor. You must also call `.setMessage()` separately.
+
+**Error**: LWC `catch` block received generic "Script-thrown exception" instead of the actual error message.
+
+**Impact**: Medium - error messages invisible to users. Found in 3 locations.
+
+**Fix**: Changed to:
+```apex
+AuraHandledException e = new AuraHandledException(message);
+e.setMessage(message);
+throw e;
+```
+
+**Prevention**: `AuraHandledException` requires BOTH constructor arg AND `.setMessage()` for the message to reach the LWC client. The constructor alone only sets an internal message that isn't serialized to the wire. This is a well-known Salesforce quirk.
+
+---
+
+## Mistake 25: Magic Strings Not Extracted as Constants
+
+**What happened**: Initial implementation had 12 hardcoded strings in Apex (role names, error messages, SOQL field lists) and 5 hardcoded strings in LWC JS (toast titles, error messages). Caught by magic-string-finder agent.
+
+**Impact**: Maintainability issue. If role names or messages change, must find/replace across code.
+
+**Fix**: Extracted all to constants:
+- Apex: `private static final String` constants at class level
+- JS: `const` declarations at module level
+
+**Prevention**: Same as US-1.1.4 Finding #15. Define constants for any string that: (a) appears more than once, (b) represents a business concept (role name, status), or (c) is an error message. This should be automatic during initial coding, not a review finding.
+
+**Repeat of**: Multiple previous tickets. Needs to be habitual.
+
+---
+
+## Mistake 26: Dead Code Left After Refactoring
+
+**What happened**: `validatePrimaryPhysicianRule` method had a dead `dynamicQuery` string variable left from an earlier implementation approach. The method was refactored to use a different query strategy but the old variable was never removed.
+
+**Impact**: Low - dead code, no runtime impact. Caught in PR review.
+
+**Fix**: Removed the dead variable.
+
+**Prevention**: Same pattern as US-1.1.4 Finding #2. After refactoring a method, explicitly search for any variables from the old approach that are no longer referenced. A "find usages" check catches this in seconds.
+
+**Repeat of**: US-1.1.4 Finding #2.
+
+---
+
+## Mistake 27: Missing Accessibility Attributes on Modals
+
+**What happened**: 3 LWC modal dialogs were missing `aria-modal="true"` and `aria-labelledby` attributes. These are required for screen reader accessibility.
+
+**Impact**: Accessibility compliance failure. Users with assistive technology cannot properly navigate modals.
+
+**Fix**: Added `aria-modal="true"` and `aria-labelledby="modal-heading-*"` to all 3 modal containers, with matching `id` on each modal's `<h2>` heading.
+
+**Prevention**: Every modal/dialog must have: `role="dialog"`, `aria-modal="true"`, `aria-labelledby` pointing to the heading, and `aria-describedby` if there's a description. Add to the pre-PR checklist.
+
+---
+
+## Mistake 28: ShowToastEvent Import Missing
+
+**What happened**: LWC JS used `ShowToastEvent` for success/error notifications but the import statement was initially missing or incorrect.
+
+**Fix**: Added `import { ShowToastEvent } from 'lightning/platformShowToastEvent';`
+
+**Prevention**: `ShowToastEvent` is from `lightning/platformShowToastEvent` (not `lightning/showToastEvent` or `lightning/platformShowToast`). The exact import path matters.
+
+---
+
+## Mistake 29: ESLint Removed Debounce setTimeout
+
+**What happened**: The `@lwc/lwc/no-async-operation` ESLint rule flagged `setTimeout` used for search input debouncing. The debounce was initially removed to satisfy the linter, breaking the search UX (every keystroke triggered an API call).
+
+**Impact**: Medium - without debounce, typing in the provider search field would fire an Apex call per keystroke, hammering the server.
+
+**Fix**: Restored the `setTimeout` debounce with `// eslint-disable-next-line @lwc/lwc/no-async-operation` annotation.
+
+**Prevention**: The `no-async-operation` rule is well-intentioned but debounce is a legitimate use case for `setTimeout`. Use eslint-disable annotations for justified cases and document why.
+
+---
+
+## Mistake 30: Assumed Connected Org Has Health Cloud Objects
+
+**What happened**: Attempted to deploy all Apex classes to the connected org `my-hc-org`. Deployment failed because the org does NOT have CareTeam, CareTeamMember, CarePlanTemplate, CarePlanTemplateGoal, or CarePlanTemplateTask standard objects available, despite having the HealthCloudGA managed package installed.
+
+**Error**: `Entity is not org-accessible (CareTeam, CareTeamMember, etc.)`
+
+**Impact**: High - entire Apex deployment blocked. Tests cannot run. Required extensive investigation into HC org configuration.
+
+**Investigation findings**:
+- HealthCloudGA managed package v258.0.0.1 IS installed
+- 23 HC permission set licenses ARE active
+- Health Cloud Standard/Foundation/Admin/Api permission sets assigned
+- Person Accounts enabled
+- BUT: CareTeam and CareTeamMember standard objects do NOT exist in org schema (confirmed via EntityDefinition SOQL)
+- CareProgramTeamMember exists as potential alternative
+- Root cause: These FHIR-aligned standard objects may require a specific HC SKU activation or Salesforce Support intervention
+
+**Fix**: Created ticket 86d21aed1 (Health Cloud Org Prerequisites) documenting all findings. Blocked on Salesforce Support.
+
+**Prevention**: Before starting implementation on Health Cloud standard objects, verify they exist in the target org:
+```apex
+SELECT QualifiedApiName FROM EntityDefinition WHERE QualifiedApiName IN ('CareTeam','CareTeamMember')
+```
+Don't assume installed managed package = all objects available. HC has tiered feature activation.
+
+---
+
+## Mistake 31: ClickUp Status "REVIEW" Doesn't Exist
+
+**What happened**: Tried to set ticket status to `"REVIEW"` but the workspace doesn't have that status. The correct status is `"in pr review"`.
+
+**Impact**: Low - extra API call.
+
+**Fix**: Used correct status `"in pr review"`.
+
+**Prevention**: This is a repeat of Mistake #2 and #14. Known workspace statuses are: backlog, in story writing, awaiting estimates, blocked internally, blocked on salesforce, blocked on client, ready for dev, prioritised, in low level design, in progress, in qa, ready for pr, in pr review, pr review done, ready for uat, deployed to uat, on hold, ready for prod, deployed on prod, complete, cancelled.
+
+**Repeat of**: Mistake #2, #14. Fifth occurrence.
+
+---
+
+## Mistake 32: Health Cloud PSL vs Permission Set Confusion
+
+**What happened**: When investigating why HC objects weren't available, initially checked only Permission Set Licenses (PSLs) and found 17 already assigned to the deploy user. Assumed this was sufficient. It wasn't - Permission Sets (which grant actual object/field access) are separate from PSLs (which enable the right to be assigned the permission set).
+
+**Impact**: Medium - spent time investigating the wrong thing.
+
+**Fix**: Discovered and assigned 4 actual permission sets: Health Cloud Standard, Foundation, Admin, Api. Objects still not available (deeper issue - see Mistake 30).
+
+**Prevention**: In Salesforce, there are 3 layers:
+1. **Permission Set License (PSL)** - enables the user to be assigned specific permission sets
+2. **Permission Set** - grants actual object/field/tab access
+3. **Object availability** - the object must exist in the org schema first
+All 3 must be in place. PSL alone does nothing.
+
+---
+
+## Mistake 33: Git Index Lock File (Repeat #4)
+
+**What happened**: Stale `.git/index.lock` when staging files. Fourth occurrence.
+
+**Fix**: `rm -f .git/index.lock`
+
+**Prevention**: This is now a systemic container environment issue. Consider adding `[ -f .git/index.lock ] && rm -f .git/index.lock` as a pre-git-operation step in the workflow.
+
+**Repeat of**: Mistake #5, #11, #18. Fourth occurrence.
+
+---
+
+## Summary (US-1.2.3)
+
+| # | Mistake | Severity | Time Lost | Repeat? |
+|---|---------|----------|-----------|---------|
+| 22 | LWC template UnaryExpression | Medium | ~10 min (deploy + fix + redeploy) | No |
+| 23 | Missing WITH SECURITY_ENFORCED | Medium | ~3 min | Yes (4th time) |
+| 24 | AuraHandledException incomplete | Medium | ~5 min | No |
+| 25 | Magic strings not extracted | Low | ~5 min | Yes (chronic) |
+| 26 | Dead code after refactoring | Low | ~2 min | Yes (#2 from 1.1.4) |
+| 27 | Missing modal accessibility attrs | Medium | ~3 min | No |
+| 28 | ShowToastEvent import path | Low | ~1 min | No |
+| 29 | ESLint removed debounce | Medium | ~5 min | No |
+| 30 | Org missing HC standard objects | High | ~60 min (investigation) | No |
+| 31 | ClickUp status name wrong | Low | ~1 min | Yes (5th time) |
+| 32 | PSL vs Permission Set confusion | Medium | ~15 min | No |
+| 33 | Git index lock file | Low | ~30 sec | Yes (4th time) |
+
+**Total estimated time lost**: ~110 minutes
+
+**Key takeaways**:
+- **LWC template limitations**: No unary operators, no method calls. Use getter properties for computed/inverted values. This is a fundamental LWC rule.
+- **AuraHandledException quirk**: Must call both constructor AND `.setMessage()` - a well-known Salesforce platform gotcha.
+- **Org object verification is critical**: Never assume installed package = available objects. Always verify via EntityDefinition query before starting implementation.
+- **HC feature activation is tiered**: Package installed + PSLs active + Permission Sets assigned still doesn't guarantee object availability. Some objects need SF Support activation.
+- **Chronic repeats**: `WITH SECURITY_ENFORCED` (4x), magic strings (chronic), ClickUp status names (5x), git lock files (4x). These need systematic fixes, not just awareness.
+
+---
+---
+
 ### Cumulative Pre-PR Checklist (Updated)
 
-Based on all mistakes across US-1.1.2, US-1.1.3, and US-1.1.4:
+Based on all mistakes across US-1.1.2, US-1.1.3, US-1.1.4, US-1.2.1, and US-1.2.3:
 
 1. **Field metadata**: Query required fields on unfamiliar objects before writing factories
 2. **Person Account WhoId**: Use `PersonContactId` for Task/Event queries
@@ -630,8 +859,15 @@ Based on all mistakes across US-1.1.2, US-1.1.3, and US-1.1.4:
 9. **Phone normalization**: Strip non-digits, handle country code prefixes
 10. **No hardcoded locales**: Use `undefined` for browser default
 11. **SLDS design tokens**: No raw hex colors in CSS
-12. **`WITH SECURITY_ENFORCED`**: On every SOQL query
+12. **`WITH SECURITY_ENFORCED`**: On every SOQL query - NO EXCEPTIONS
 13. **API version alignment**: Meta XMLs match `sfdx-project.json`
 14. **Distinct test data**: Negative tests should isolate exact error conditions
-15. **No magic strings**: Use constants for status values, categories, etc.
+15. **No magic strings**: Use constants for status values, categories, error messages
 16. **Self-review full diff**: Read through entire diff before creating PR
+17. **LWC template expressions**: No `!` unary, no method calls - use getter properties
+18. **AuraHandledException**: Always use constructor + `.setMessage()` together
+19. **Modal accessibility**: `role="dialog"`, `aria-modal="true"`, `aria-labelledby`
+20. **ShowToastEvent import**: `lightning/platformShowToastEvent` (exact path)
+21. **ESLint overrides**: Document `eslint-disable` for legitimate uses (debounce, etc.)
+22. **Org object verification**: Query EntityDefinition before implementing on HC standard objects
+23. **Extract constants during initial coding**: Not as a review afterthought
