@@ -311,4 +311,62 @@ public class TestDataFactory {
         insert task;
         return task;
     }
+
+    // ── Care Team factories (US-1.2.3) ──
+
+    /**
+     * @description Creates and inserts a provider Account (Business Account).
+     * @param name Provider name.
+     * @return The inserted Account record.
+     */
+    public static Account createProvider(String name) {
+        Account provider = new Account(
+            Name = name
+        );
+        insert provider;
+        return provider;
+    }
+
+    /**
+     * @description Creates and inserts a CareTeam for a patient.
+     * @param patientAccountId The patient Account Id.
+     * @param status CareTeam status (e.g. Active).
+     * @return The inserted CareTeam record.
+     */
+    public static CareTeam createCareTeam(Id patientAccountId, String status) {
+        CareTeam team = new CareTeam(
+            PatientId = patientAccountId,
+            Name = 'Care Team',
+            Status = status
+        );
+        insert team;
+        return team;
+    }
+
+    /**
+     * @description Creates and inserts a CareTeamMember.
+     * @param careTeamId The parent CareTeam Id.
+     * @param providerAccountId The provider Account Id.
+     * @param role Member role (e.g. Primary_Physician).
+     * @param isPrimary Whether this is the primary physician.
+     * @return The inserted CareTeamMember record.
+     */
+    public static CareTeamMember createCareTeamMember(
+        Id careTeamId,
+        Id providerAccountId,
+        String role,
+        Boolean isPrimary
+    ) {
+        CareTeamMember member = new CareTeamMember(
+            CareTeamId = careTeamId,
+            AccountId = providerAccountId,
+            Role = role,
+            Status = 'Active',
+            Is_Primary__c = isPrimary,
+            Notification_Pref__c = 'All',
+            PeriodStartDate = Date.today()
+        );
+        insert member;
+        return member;
+    }
 }

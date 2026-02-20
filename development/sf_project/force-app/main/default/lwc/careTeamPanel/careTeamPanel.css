@@ -1,0 +1,292 @@
+/* Care Team Panel LWC - BEM naming, CSS custom properties */
+
+:host {
+    --careTeam-card-bg: var(--slds-g-color-surface-container-1, #ffffff);
+    --careTeam-card-hover-bg: var(--slds-g-color-surface-container-2, #f3f3f3);
+    --careTeam-border-color: var(--slds-g-color-border-base-1, #d8dde6);
+    --careTeam-border-radius: 0.5rem;
+    --careTeam-spacing: 1rem;
+
+    --color-primary: var(--slds-g-color-brand-base-50, #1b96ff);
+    --color-success: var(--slds-g-color-success-base-50, #4bca81);
+    --color-warning: var(--slds-g-color-warning-base-50, #ff9a3c);
+    --color-neutral: var(--slds-g-color-neutral-base-50, #706e6b);
+}
+
+/* Loading */
+.careTeam__loading {
+    display: flex;
+    justify-content: center;
+    padding: 3rem 0;
+}
+
+/* Error */
+.careTeam__error {
+    display: flex;
+    align-items: center;
+    padding: var(--careTeam-spacing);
+    background-color: var(--slds-g-color-error-base-10, #fce4ec);
+    border-radius: var(--careTeam-border-radius);
+    color: var(--slds-g-color-error-base-60, #c62828);
+    margin: var(--careTeam-spacing);
+}
+
+/* Empty state */
+.careTeam__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 3rem 0;
+    color: var(--color-neutral);
+}
+
+.careTeam__empty-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--slds-g-color-neutral-base-10, #181818);
+    margin: 0.5rem 0 0;
+}
+
+.careTeam__empty-text {
+    font-size: 0.875rem;
+    margin: 0;
+}
+
+/* Member list */
+.careTeam__list {
+    padding: 0.5rem var(--careTeam-spacing);
+}
+
+/* Member card */
+.careTeam__card {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border: 1px solid var(--careTeam-border-color);
+    border-radius: var(--careTeam-border-radius);
+    margin-bottom: 0.5rem;
+    background-color: var(--careTeam-card-bg);
+    transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.careTeam__card:hover {
+    background-color: var(--careTeam-card-hover-bg);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* Card icon */
+.careTeam__card-icon {
+    flex-shrink: 0;
+    padding-top: 0.125rem;
+}
+
+/* Card body */
+.careTeam__card-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.careTeam__card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.careTeam__provider-name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--slds-g-color-neutral-base-10, #181818);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Badges */
+.careTeam__badges {
+    display: flex;
+    gap: 0.375rem;
+    flex-shrink: 0;
+}
+
+.careTeam__role-badge {
+    display: inline-block;
+    padding: 0.0625rem 0.5rem;
+    border-radius: 1rem;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    background-color: var(--slds-g-color-neutral-base-95, #ecebea);
+    color: var(--color-neutral);
+    white-space: nowrap;
+}
+
+.careTeam__role-badge--primary_physician {
+    background-color: var(--slds-g-color-brand-base-10, #e1f5fe);
+    color: var(--slds-g-color-brand-base-60, #0176d3);
+}
+
+.careTeam__role-badge--specialist {
+    background-color: #f3e8ff;
+    color: #6b21a8;
+}
+
+.careTeam__role-badge--care_coordinator {
+    background-color: var(--slds-g-color-success-base-10, #e8f5e9);
+    color: var(--slds-g-color-success-base-60, #2e844a);
+}
+
+.careTeam__role-badge--nurse {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.careTeam__role-badge--allied_health {
+    background-color: #fce7f3;
+    color: #9d174d;
+}
+
+.careTeam__role-badge--pharmacist {
+    background-color: #dbeafe;
+    color: #1e40af;
+}
+
+.careTeam__primary-badge {
+    display: inline-block;
+    padding: 0.0625rem 0.5rem;
+    border-radius: 1rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    background-color: var(--slds-g-color-brand-base-50, #1b96ff);
+    color: #ffffff;
+    white-space: nowrap;
+}
+
+/* Card meta */
+.careTeam__card-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.careTeam__meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    color: var(--color-neutral);
+}
+
+.careTeam__meta-icon {
+    --slds-c-icon-color-foreground-default: var(--color-neutral);
+}
+
+/* Card actions */
+.careTeam__card-actions {
+    display: flex;
+    gap: 0.25rem;
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.careTeam__card:hover .careTeam__card-actions {
+    opacity: 1;
+}
+
+/* Footer */
+.careTeam__footer {
+    text-align: right;
+}
+
+.careTeam__count {
+    font-size: 0.75rem;
+    color: var(--color-neutral);
+}
+
+/* ── Modal additions ── */
+
+/* Provider search */
+.careTeam__selected-provider {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    background-color: var(--slds-g-color-brand-base-10, #e1f5fe);
+    border-radius: var(--careTeam-border-radius);
+    border: 1px solid var(--color-primary);
+}
+
+.careTeam__search-loading {
+    display: flex;
+    justify-content: center;
+    padding: 0.75rem 0;
+}
+
+.careTeam__search-results {
+    border: 1px solid var(--careTeam-border-color);
+    border-radius: var(--careTeam-border-radius);
+    max-height: 12rem;
+    overflow-y: auto;
+    margin-top: 0.25rem;
+}
+
+.careTeam__search-item {
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    transition: background-color 0.1s ease;
+}
+
+.careTeam__search-item:hover {
+    background-color: var(--careTeam-card-hover-bg);
+}
+
+.careTeam__search-item + .careTeam__search-item {
+    border-top: 1px solid var(--careTeam-border-color);
+}
+
+.careTeam__search-item-name {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--slds-g-color-neutral-base-10, #181818);
+}
+
+.careTeam__search-item-meta {
+    display: flex;
+    gap: 0.75rem;
+    font-size: 0.75rem;
+    color: var(--color-neutral);
+}
+
+/* Warning */
+.careTeam__warning {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    background-color: var(--slds-g-color-warning-base-10, #fff3e0);
+    border-radius: var(--careTeam-border-radius);
+    border: 1px solid var(--color-warning);
+    font-size: 0.8125rem;
+    color: var(--slds-g-color-warning-base-70, #e65100);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .careTeam__card-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .careTeam__card-meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+
+    .careTeam__card-actions {
+        opacity: 1;
+    }
+}
