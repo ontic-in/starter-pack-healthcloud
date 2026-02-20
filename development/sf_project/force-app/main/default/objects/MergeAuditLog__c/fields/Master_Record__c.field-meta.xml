@@ -8,5 +8,5 @@
     <relationshipLabel>Merge Audit Logs</relationshipLabel>
     <required>true</required>
     <description>The surviving master record after the merge operation.</description>
-    <deleteConstraint>SetNull</deleteConstraint>
+    <deleteConstraint>Restrict</deleteConstraint>
 </CustomField>

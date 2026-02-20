@@ -38,7 +38,7 @@ public with sharing class PatientMergeController {
      * @return MergePreview with both records and related record counts.
      * @throws AuraHandledException if either record is not found.
      */
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled
     public static MergePreview getMergePreview(Id masterAccountId, Id duplicateAccountId) {
         List<Account> masters = [
             SELECT Id, FirstName, LastName, NRIC__c, PersonBirthdate,
@@ -162,10 +162,37 @@ public with sharing class PatientMergeController {
         // Apply selected field values from the compare step to the master record
         if (String.isNotBlank(fieldsChanged) && fieldsChanged != '{}') {
             Map<String, Object> fieldMap = (Map<String, Object>) JSON.deserializeUntyped(fieldsChanged);
+            Map<String, Schema.SObjectField> fieldDescribeMap = Schema.SObjectType.Account.fields.getMap();
+
             for (String fieldName : fieldMap.keySet()) {
                 Object fieldValue = fieldMap.get(fieldName);
-                String strValue = fieldValue != null ? String.valueOf(fieldValue) : null;
-                if (strValue != null && strValue != '-') {
+                if (fieldValue == null) {
+                    continue;
+                }
+                String strValue = String.valueOf(fieldValue);
+                if (strValue == '-') {
+                    continue;
+                }
+
+                Schema.SObjectField sField = fieldDescribeMap.get(fieldName);
+                if (sField != null) {
+                    Schema.DisplayType fieldType = sField.getDescribe().getType();
+                    if (fieldType == Schema.DisplayType.DATE) {
+                        masterRecord.put(fieldName, Date.valueOf(strValue));
+                    } else if (fieldType == Schema.DisplayType.DATETIME) {
+                        masterRecord.put(fieldName, DateTime.valueOf(strValue));
+                    } else if (fieldType == Schema.DisplayType.DOUBLE
+                            || fieldType == Schema.DisplayType.CURRENCY
+                            || fieldType == Schema.DisplayType.PERCENT) {
+                        masterRecord.put(fieldName, Decimal.valueOf(strValue));
+                    } else if (fieldType == Schema.DisplayType.INTEGER) {
+                        masterRecord.put(fieldName, Integer.valueOf(strValue));
+                    } else if (fieldType == Schema.DisplayType.BOOLEAN) {
+                        masterRecord.put(fieldName, Boolean.valueOf(strValue));
+                    } else {
+                        masterRecord.put(fieldName, strValue);
+                    }
+                } else {
                     masterRecord.put(fieldName, strValue);
                 }
             }
