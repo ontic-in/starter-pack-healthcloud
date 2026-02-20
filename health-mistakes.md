@@ -722,3 +722,70 @@ for (ChildRelationship cr : Schema.SObjectType.CarePlanTemplate.getChildRelation
 - **Deploy-time risk**: Agent-generated code with unverified HC object relationships is the biggest risk. Must verify at deploy time via org describe.
 - **Knowledge persistence**: Use `health-mistakes.md` as the primary cross-session knowledge store since auto memory is permission-restricted.
 - **Agent trust boundary**: Sub-agents produce structurally correct code, but field-level accuracy (relationship names, picklist values) requires org verification.
+
+---
+---
+
+# Session: US-1.1.4 Second-Pass PR Fixes + US-1.2.1 Branch Sync
+
+**Date**: 2026-02-20
+**Context**: Fixing second-pass PR review comments on PR #6 (branch clickup-86d1yxw61), then switching to clickup-86d1yxwbh and rebasing
+
+---
+
+## Mistake 31: Git safe.directory Ownership Error (Repeat)
+
+**What happened**: First git command of the session failed with `fatal: detected dubious ownership in repository`.
+
+**Fix**: `git config --global --add safe.directory /home/dev/workspace/starter-pack-healthcloud`
+
+**Prevention**: This is now a **4th occurrence** across sessions. Should be set automatically at container/session start. Known container environment artifact.
+
+**Repeat of**: Mistake #16.
+
+---
+
+## Mistake 32: Git Index Lock File (Repeat #4)
+
+**What happened**: `git add` failed with `fatal: Unable to create '.git/index.lock': File exists` when staging files for the US-1.1.4 PR fix commit.
+
+**Fix**: `rm -f .git/index.lock` then re-ran git add.
+
+**Prevention**: Fourth occurrence. This is a systemic container issue. Should be automated away.
+
+**Repeat of**: Mistake #5, #11, #18, #26.
+
+---
+
+## Mistake 33: Rebase Produced 3 Sequential Merge Conflicts
+
+**What happened**: Running `git pull --rebase origin clickup-86d1yxwbh` to sync local with remote produced 3 sequential conflicts across 3 commits being replayed:
+1. **Conflict 1**: `TestDataFactory.cls` - local branch had ClinicalEncounter/Task/Case factories, incoming had CarePlanTemplate factories. Both added methods after `createMemberPlan`.
+2. **Conflict 2**: `health-mistakes.md` - local branch had US-1.1.4 PR Review + Workflow mistakes (#21-25), incoming had US-1.2.1 mistakes (#14-18 with divergent numbering).
+3. **Conflict 3**: Both files again - Patient Timeline commit overlapping with already-resolved content.
+
+**Impact**: Medium - ~5 min to resolve all 3 conflicts, renumber US-1.2.1 mistakes from 14-18 to 26-30, and keep both sides' content.
+
+**Fix**: For each conflict, kept both sides' content. Renumbered the US-1.2.1 mistakes to continue the global sequence (26-30). The Patient Timeline commit (conflict 3) had no new content at the conflict points, so HEAD content was kept.
+
+**Prevention**: This is the same pattern as Mistake #25 - divergent branches modifying the same files. Mitigations:
+1. **Rebase feature branches on main regularly** to reduce drift
+2. **Merge completed PRs promptly** before starting new branches
+3. For shared tracking files like `health-mistakes.md`, accept that conflicts are inevitable when parallel branches exist
+
+---
+
+## Summary (Session 2026-02-20)
+
+| # | Mistake | Severity | Time Lost | Repeat? |
+|---|---------|----------|-----------|---------|
+| 31 | Git safe.directory ownership | Low | ~30 sec | Yes (#16) |
+| 32 | Git index lock file | Low | ~30 sec | Yes (#5, #11, #18, #26) |
+| 33 | Rebase with 3 sequential merge conflicts | Medium | ~5 min | Yes (#25) |
+
+**Total estimated time lost**: ~6 minutes
+
+**Key takeaways**:
+- **Git safe.directory and index.lock are permanent container artifacts** - should be handled automatically, not manually each session
+- **Parallel branches + shared files = guaranteed conflicts** - accept this as cost of parallel development, not a preventable mistake
+- **Renumbering mistakes during conflict resolution** is tedious but necessary to maintain a clean global sequence
