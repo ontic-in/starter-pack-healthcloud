@@ -1,0 +1,344 @@
+<template>
+    <lightning-card title="Care Team" icon-name="standard:groups">
+
+        <!-- Header: Add Member button -->
+        <div slot="actions">
+            <lightning-button
+                label="Add Member"
+                variant="brand"
+                icon-name="utility:add"
+                onclick={handleAddMember}
+            ></lightning-button>
+        </div>
+
+        <!-- Loading -->
+        <template lwc:if={isLoading}>
+            <div class="careTeam__loading">
+                <lightning-spinner alternative-text="Loading care team" size="medium"></lightning-spinner>
+            </div>
+        </template>
+
+        <!-- Error -->
+        <template lwc:if={error}>
+            <div class="careTeam__error">
+                <lightning-icon icon-name="utility:error" size="small" variant="error"></lightning-icon>
+                <span class="slds-m-left_x-small">{error}</span>
+            </div>
+        </template>
+
+        <!-- Member Cards -->
+        <template lwc:if={hasMembers}>
+            <div class="careTeam__list">
+                <template for:each={formattedMembers} for:item="member">
+                    <div key={member.memberId} class="careTeam__card">
+                        <!-- Icon -->
+                        <div class="careTeam__card-icon">
+                            <lightning-icon
+                                icon-name={member.roleIcon}
+                                size="small"
+                            ></lightning-icon>
+                        </div>
+
+                        <!-- Info -->
+                        <div class="careTeam__card-body">
+                            <div class="careTeam__card-header">
+                                <h3 class="careTeam__provider-name">{member.providerName}</h3>
+                                <div class="careTeam__badges">
+                                    <span class={member.roleBadgeClass}>{member.roleLabel}</span>
+                                    <template lwc:if={member.primaryBadge}>
+                                        <span class="careTeam__primary-badge">Primary</span>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <div class="careTeam__card-meta">
+                                <template lwc:if={member.providerPhone}>
+                                    <span class="careTeam__meta-item">
+                                        <lightning-icon icon-name="utility:call" size="xx-small" class="careTeam__meta-icon"></lightning-icon>
+                                        {member.providerPhone}
+                                    </span>
+                                </template>
+                                <span class="careTeam__meta-item">
+                                    <lightning-icon icon-name="utility:notification" size="xx-small" class="careTeam__meta-icon"></lightning-icon>
+                                    {member.notifLabel}
+                                </span>
+                                <template lwc:if={member.formattedStartDate}>
+                                    <span class="careTeam__meta-item">
+                                        <lightning-icon icon-name="utility:date_input" size="xx-small" class="careTeam__meta-icon"></lightning-icon>
+                                        Since {member.formattedStartDate}
+                                    </span>
+                                </template>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="careTeam__card-actions">
+                            <lightning-button-icon
+                                icon-name="utility:edit"
+                                alternative-text="Edit member"
+                                data-member-id={member.memberId}
+                                onclick={handleEditMember}
+                                variant="bare"
+                                size="small"
+                            ></lightning-button-icon>
+                            <lightning-button-icon
+                                icon-name="utility:delete"
+                                alternative-text="Remove member"
+                                data-member-id={member.memberId}
+                                onclick={handleRemoveMember}
+                                variant="bare"
+                                size="small"
+                            ></lightning-button-icon>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </template>
+
+        <!-- Empty State -->
+        <template lwc:if={showEmptyState}>
+            <div class="careTeam__empty">
+                <lightning-icon icon-name="standard:groups" size="large"></lightning-icon>
+                <h3 class="careTeam__empty-title">No Care Team Members</h3>
+                <p class="careTeam__empty-text">
+                    Add providers to this patient's care team.
+                </p>
+                <lightning-button
+                    label="Add First Member"
+                    variant="brand"
+                    onclick={handleAddMember}
+                    class="slds-m-top_medium"
+                ></lightning-button>
+            </div>
+        </template>
+
+        <!-- Footer -->
+        <div slot="footer" class="careTeam__footer">
+            <span class="careTeam__count">{memberCount} members</span>
+        </div>
+    </lightning-card>
+
+    <!-- ── Add Member Modal ── -->
+    <template lwc:if={showAddModal}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" onclick={handleCloseAddModal}>
+                    <lightning-icon icon-name="utility:close" size="small" variant="inverse"></lightning-icon>
+                    <span class="slds-assistive-text">Close</span>
+                </button>
+                <div class="slds-modal__header">
+                    <h2 class="slds-modal__title">Add Care Team Member</h2>
+                </div>
+                <div class="slds-modal__content slds-p-around_medium">
+                    <!-- Provider Search -->
+                    <div class="slds-form-element slds-m-bottom_medium">
+                        <label class="slds-form-element__label">Search Provider</label>
+                        <div class="slds-form-element__control">
+                            <template lwc:if={hasSelectedProvider}>
+                                <div class="careTeam__selected-provider">
+                                    <lightning-icon icon-name="standard:account" size="x-small"></lightning-icon>
+                                    <span class="slds-m-left_x-small">{selectedProviderName}</span>
+                                    <lightning-button-icon
+                                        icon-name="utility:close"
+                                        alternative-text="Clear selection"
+                                        onclick={handleClearProvider}
+                                        variant="bare"
+                                        size="small"
+                                        class="slds-m-left_x-small"
+                                    ></lightning-button-icon>
+                                </div>
+                            </template>
+                            <template lwc:else>
+                                <lightning-input
+                                    type="search"
+                                    placeholder="Type provider name (min 2 characters)"
+                                    value={providerSearchTerm}
+                                    onchange={handleProviderSearch}
+                                ></lightning-input>
+                                <!-- Search Results Dropdown -->
+                                <template lwc:if={isSearching}>
+                                    <div class="careTeam__search-loading">
+                                        <lightning-spinner alternative-text="Searching" size="small"></lightning-spinner>
+                                    </div>
+                                </template>
+                                <template lwc:if={hasProviderResults}>
+                                    <div class="careTeam__search-results">
+                                        <template for:each={providerSearchResults} for:item="provider">
+                                            <div
+                                                key={provider.accountId}
+                                                class="careTeam__search-item"
+                                                data-account-id={provider.accountId}
+                                                onclick={handleSelectProvider}
+                                            >
+                                                <div class="careTeam__search-item-name">{provider.name}</div>
+                                                <div class="careTeam__search-item-meta">
+                                                    <template lwc:if={provider.phone}>
+                                                        <span>{provider.phone}</span>
+                                                    </template>
+                                                    <span>{provider.patientCountLabel}</span>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Role -->
+                    <lightning-combobox
+                        label="Role"
+                        value={newMemberRole}
+                        options={roleOptions}
+                        placeholder="Select a role"
+                        onchange={handleNewRoleChange}
+                        required
+                        class="slds-m-bottom_medium"
+                    ></lightning-combobox>
+
+                    <!-- Primary Warning -->
+                    <template lwc:if={showPrimaryWarning}>
+                        <div class="careTeam__warning slds-m-bottom_medium">
+                            <lightning-icon icon-name="utility:warning" size="x-small" variant="warning"></lightning-icon>
+                            <span class="slds-m-left_x-small">
+                                This team already has a primary physician. Adding another will fail.
+                            </span>
+                        </div>
+                    </template>
+
+                    <!-- Is Primary -->
+                    <lightning-input
+                        type="checkbox"
+                        label="Primary Physician"
+                        checked={newMemberIsPrimary}
+                        onchange={handleNewPrimaryChange}
+                        class="slds-m-bottom_medium"
+                    ></lightning-input>
+
+                    <!-- Notification Preference -->
+                    <lightning-combobox
+                        label="Notification Preference"
+                        value={newMemberNotifPref}
+                        options={notificationOptions}
+                        onchange={handleNewNotifChange}
+                    ></lightning-combobox>
+                </div>
+                <div class="slds-modal__footer">
+                    <lightning-button
+                        label="Cancel"
+                        onclick={handleCloseAddModal}
+                    ></lightning-button>
+                    <lightning-button
+                        label="Add Member"
+                        variant="brand"
+                        onclick={handleSaveNewMember}
+                        disabled={!canSaveNewMember}
+                        class="slds-m-left_x-small"
+                    ></lightning-button>
+                </div>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+    <!-- ── Edit Member Modal ── -->
+    <template lwc:if={showEditModal}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" onclick={handleCloseEditModal}>
+                    <lightning-icon icon-name="utility:close" size="small" variant="inverse"></lightning-icon>
+                    <span class="slds-assistive-text">Close</span>
+                </button>
+                <div class="slds-modal__header">
+                    <h2 class="slds-modal__title">Edit: {editMemberProviderName}</h2>
+                </div>
+                <div class="slds-modal__content slds-p-around_medium">
+                    <!-- Role -->
+                    <lightning-combobox
+                        label="Role"
+                        value={editMemberRole}
+                        options={roleOptions}
+                        onchange={handleEditRoleChange}
+                        required
+                        class="slds-m-bottom_medium"
+                    ></lightning-combobox>
+
+                    <!-- Primary Warning -->
+                    <template lwc:if={showEditPrimaryWarning}>
+                        <div class="careTeam__warning slds-m-bottom_medium">
+                            <lightning-icon icon-name="utility:warning" size="x-small" variant="warning"></lightning-icon>
+                            <span class="slds-m-left_x-small">
+                                This team already has a primary physician. Saving as primary will fail unless the existing primary is changed first.
+                            </span>
+                        </div>
+                    </template>
+
+                    <!-- Is Primary -->
+                    <lightning-input
+                        type="checkbox"
+                        label="Primary Physician"
+                        checked={editMemberIsPrimary}
+                        onchange={handleEditPrimaryChange}
+                        class="slds-m-bottom_medium"
+                    ></lightning-input>
+
+                    <!-- Notification Preference -->
+                    <lightning-combobox
+                        label="Notification Preference"
+                        value={editMemberNotifPref}
+                        options={notificationOptions}
+                        onchange={handleEditNotifChange}
+                    ></lightning-combobox>
+                </div>
+                <div class="slds-modal__footer">
+                    <lightning-button
+                        label="Cancel"
+                        onclick={handleCloseEditModal}
+                    ></lightning-button>
+                    <lightning-button
+                        label="Save Changes"
+                        variant="brand"
+                        onclick={handleSaveEdit}
+                        disabled={!canSaveEdit}
+                        class="slds-m-left_x-small"
+                    ></lightning-button>
+                </div>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+    <!-- ── Remove Confirmation Modal ── -->
+    <template lwc:if={showRemoveConfirm}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open slds-modal_small">
+            <div class="slds-modal__container">
+                <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" onclick={handleCloseRemoveConfirm}>
+                    <lightning-icon icon-name="utility:close" size="small" variant="inverse"></lightning-icon>
+                    <span class="slds-assistive-text">Close</span>
+                </button>
+                <div class="slds-modal__header">
+                    <h2 class="slds-modal__title">Remove Team Member</h2>
+                </div>
+                <div class="slds-modal__content slds-p-around_medium">
+                    <p>
+                        Are you sure you want to remove <strong>{removeMemberName}</strong> from this care team?
+                        They will be set to inactive.
+                    </p>
+                </div>
+                <div class="slds-modal__footer">
+                    <lightning-button
+                        label="Cancel"
+                        onclick={handleCloseRemoveConfirm}
+                    ></lightning-button>
+                    <lightning-button
+                        label="Remove"
+                        variant="destructive"
+                        onclick={handleConfirmRemove}
+                        class="slds-m-left_x-small"
+                    ></lightning-button>
+                </div>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+</template>
